@@ -1,8 +1,17 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import List
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from .base import BaseModel
+from .diary import DiaryModel
 
-class User(Base):
-	__tablename__ = "users"
-	user_id: Mapped[int] = mapped_column(unique=True)
-	name: Mapped[str | None]
+
+class UserModel(BaseModel):
+    __tablename__ = "users"
+    user_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str | None]
+    diaries: Mapped[List["DiaryModel"]] = relationship(
+        back_populates="user",
+        collection_class=list,
+        cascade="delete, delete-orphan",
+        passive_deletes=True,
+    )

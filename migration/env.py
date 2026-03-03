@@ -13,8 +13,7 @@ sys.path.append(os.path.abspath('src'))
 
 from models.base import Base
 
-from models.user import User
-from models.diary import Diary
+import models
 from configs.config import settings
 
 # this is the Alembic Config object, which provides
