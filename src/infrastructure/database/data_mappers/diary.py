@@ -1,8 +1,5 @@
-
-
-from entities.diary import Diary
-from entities.user import User
-from models.diary import DiaryModel
+from domain.entities.diary import Diary
+from infrastructure.database.models import DiaryModel
 
 
 def diary_model_to_entity(instance: DiaryModel):

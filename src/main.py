@@ -4,9 +4,9 @@ import datetime
 from configs.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from configs.config import settings
-from data_mappers.diary import diary_entity_to_model
-from entities import Diary
+
+from domain.entities.diary import Diary
+from infrastructure.database.data_mappers.diary import diary_entity_to_model
 
 
 async def async_main():
