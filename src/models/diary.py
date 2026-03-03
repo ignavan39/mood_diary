@@ -1,10 +1,10 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
 from datetime import date as date_type
 
 from models.user import User
+from models.base import Base
 
 
 class Diary(Base):
