@@ -1,8 +1,8 @@
-from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .diary import Diary
+from domain.entities.diary import Diary
+
 
 @dataclass(kw_only=True)
 class User:
