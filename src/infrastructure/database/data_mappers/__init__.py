@@ -1,1 +1,2 @@
-from .diary import diary_model_to_entity, diary_entity_to_model
+from .diary import diary_model_to_entity
+from .user import user_model_to_entity
