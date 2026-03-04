@@ -5,7 +5,8 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
-
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 ---
 
 ## 📋 О проекте
@@ -16,6 +17,7 @@
 - 🎯 Оценка настроения одним нажатием (шкала 0–10)
 - 📅 Напоминание раз в день (настраиваемое время)
 - 📊 Просмотр истории и статистики за неделю/месяц
+- 🧱 Чистая архитектура: Domain → Repository → Infrastructure
 
 ---
 
@@ -101,19 +103,58 @@ mood_diary/
 ├── migration/               # Alembic-миграции
 │   ├── versions/            # Файлы миграций
 │   └── env.py               # Конфигурация окружения Alembic
-├── alembic.ini              # Настройки Alembic
-├── src/
-│   ├── __init__.py
-│   ├── main.py              # Точка входа, запуск бота
-│   ├── database.py          # Настройки SQLAlchemy, сессии
-│   ├── configs/             # Конфигурация через Pydantic Settings
-│   └── models/              # SQLAlchemy-модели (User, MoodEntry)
+├──src/
+│   ├──  main.py                          # Точка входа: запуск бота, lifecycle
+│   ├──  domain/
+│   │   ├── entities/                    # Бизнес-объекты (User, Diary) — чистый Python
+│   │   ├── repositories/                # Абстракции репозиториев (interface)
+│   ├──  infrastructure/
+│   |   ├── configs/                     # Настройки через Pydantic Settings
+│   │   ├── database/
+│   │   │   ├── session_manager.py       # DatabaseSessionManager + asynccontextmanager
+│   │   |   ├── models/                  # SQLAlchemy-модели (UserModel, DiaryModel)
+│   │   |   ├── repositories/            # Реализации репозиториев (SQLAchemyUserRepository)
+│   │   |   └── data_mappers/            # Конвертеры: model ↔ entity
+│   |   └── telegram/                    # Бот: хендлеры, клавиатуры, middleware
+|   └── application/                     # Use Cases / Services
 ├── pyproject.toml           # Зависимости и метаданные проекта
 ├── uv.lock                  # Lock-файл зависимостей (uv)
+├── alembic.ini              # Настройки Alembic
 ├── docker-compose.yml       # Оркестрация сервисов
 ├── Dockerfile               # Образ приложения
 └── .env.example             # Шаблон переменных окружения
 ```
+
+## 🔁 Поток данных
+```
+Telegram Update 
+    ↓
+Handler (infrastructure/telegram)
+    ↓
+Application Service / Use Case (опционально)
+    ↓
+Repository Interface (domain/repositories)
+    ↓
+Repository Implementation (infrastructure/database/repositories)
+    ↓
+SQLAlchemy Model + AsyncSession
+    ↓
+PostgreSQL
+```
+---
+
+## 📦 Технологии
+
+| Компонент | Технология | Зачем |
+|-----------|-----------|--------|
+| **Backend** | Python 3.12+, asyncio | Асинхронность, высокая производительность |
+| **Bot Framework** | aiogram 3.x | Современный async-фреймворк для Telegram |
+| **ORM** | SQLAlchemy 2.0 + asyncpg | Типизированные async-запросы к PostgreSQL |
+| **Config** | Pydantic Settings | Валидация настроек, типизация, .env-поддержка |
+| **Migrations** | Alembic | Управление схемой БД |
+| **DI/Architecture** | Clean Architecture + Repository Pattern | Разделение слоёв, тестируемость |
+| **Containerization** | Docker, Compose | Воспроизводимая среда, лёгкий деплой |
+| **Package Manager** | uv *(или pip)* | Быстрая установка зависимостей |
 
 ---
 
@@ -133,6 +174,16 @@ alembic downgrade -1
 
 # Просмотреть историю миграций
 alembic history
+```
+
+## Код стайл
+
+```
+# Проверка типов
+mypy src/
+
+# Линтинг
+ruff check src/ && ruff format src/
 ```
 
 ## 📦 Технологии
