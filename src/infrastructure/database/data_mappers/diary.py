@@ -8,4 +8,3 @@ def diary_model_to_entity(instance: DiaryModel):
         rating=instance.rating,
         user_id=instance.user_id,
     )
-

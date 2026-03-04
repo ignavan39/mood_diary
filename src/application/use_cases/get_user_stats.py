@@ -1,2 +1,2 @@
 class GetUserStatsUseCase:
-  pass
+    pass

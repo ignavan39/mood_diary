@@ -1,1 +1,1 @@
-from .session_manager import sessionmanager
+from .session_manager import DatabaseSessionManager
