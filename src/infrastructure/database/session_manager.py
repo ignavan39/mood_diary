@@ -1,10 +1,14 @@
 import contextlib
+import logging
 from typing import Any, AsyncIterator
 
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from infrastructure.configs import settings
+
+logger = logging.getLogger(__name__)
+
 
 class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
@@ -16,6 +20,7 @@ class DatabaseSessionManager:
             raise Exception("DatabaseSessionManager is not initialized")
         await self._engine.dispose()
 
+        logger.info('DatabaseSessionManager: enginge dispose')
         self._engine = None
         self._sessionmaker = None
 
@@ -26,6 +31,7 @@ class DatabaseSessionManager:
 
         async with self._engine.begin() as connection:
             try:
+                logger.info('DatabaseSessionManager: connection started')
                 yield connection
             except Exception:
                 await connection.rollback()
@@ -44,6 +50,7 @@ class DatabaseSessionManager:
             raise
         finally:
             await session.close()
+
 
 db_config = settings.get_db_config()
 sessionmanager = DatabaseSessionManager(settings.get_db_config().get_url())
