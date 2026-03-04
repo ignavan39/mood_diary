@@ -5,9 +5,9 @@ import sys
 from aiogram import Bot, Dispatcher
 
 from infrastructure.configs import settings
-from infrastructure.database import DatabaseSessionManager
+from infrastructure.database import DatabaseSessionManager, database_session_manager
 from infrastructure.telegram import DatabaseSessionMiddleware
-from infrastructure.telegram.handlers.user import create_user_handler
+from infrastructure.telegram.handlers.user import router as user_router
 
 logger = logging.getLogger(__name__)
 logger.info("🔧 Logging system initialized")
@@ -35,16 +35,15 @@ async def async_main() -> None:
     bot = Bot(settings.tg_bot.token)
 
     dp = Dispatcher()
-    session_manager = DatabaseSessionManager(settings.db.get_url())
 
     logger.info("Starting mood_diary bot...")
     dp.startup.register(on_startup)
-    dp.shutdown.register(partial(on_shutdown, bot, session_manager))
+    dp.shutdown.register(partial(on_shutdown, bot, database_session_manager))
 
-    dp.message.middleware(DatabaseSessionMiddleware(session_manager))
-    dp.callback_query.middleware(DatabaseSessionMiddleware(session_manager))
+    dp.message.middleware(DatabaseSessionMiddleware(database_session_manager))
+    dp.callback_query.middleware(DatabaseSessionMiddleware(database_session_manager))
 
-    create_user_handler(router=dp)
+    dp.include_router(user_router)
 
     await dp.start_polling(bot)
     logger.info("📡 Polling stopped")

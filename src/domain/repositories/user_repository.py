@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from domain.entities import User
 
 
 class UserRepository(ABC):
     @abstractmethod
-    async def save(self, user: User) -> User:
+    async def save(self, user: User) -> Optional[User]:
         """Persist a user and return it with generated ID"""
         pass
 

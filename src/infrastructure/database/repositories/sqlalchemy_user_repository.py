@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.entities import User
 from domain.exceptions import DuplicateUserError
 from domain.repositories.user_repository import UserRepository
-from infrastructure.database.data_mappers import user_model_to_entity
 from infrastructure.database.models import UserModel
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,9 @@ class SQLAchemyUserRepository(UserRepository):
         try:
             self.session.add(user_model)
             await self.session.flush()
-            return user_model_to_entity(user_model)
+            return User(
+                id=user_model.id, name=user_model.name, user_id=user_model.user_id
+            )
 
         except IntegrityError as e:
             error_msg = str(e.orig).lower() if e.orig else str(e).lower()
@@ -37,9 +38,9 @@ class SQLAchemyUserRepository(UserRepository):
         result = await self.session.execute(
             select(UserModel).where(UserModel.user_id == user_id)
         )
-        model = result.scalar_one_or_none()
+        user_model = result.scalar_one_or_none()
 
-        if model is None:
+        if user_model is None:
             return None
 
-        return user_model_to_entity(model)
+        return User(id=user_model.id, name=user_model.name, user_id=user_model.user_id)
