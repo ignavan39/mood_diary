@@ -7,12 +7,12 @@ class DatabaseConfig(BaseSettings):
     host: str
     port: int
     name: str
-
+    echo_sql: bool = False
     model_config = SettingsConfigDict(
         env_prefix="PG__", extra="ignore", env_file=".env"
     )
 
-    def get_url(self):
+    def get_url(self) -> str:
         return (
             f"postgresql+asyncpg://{self.user}:{self.password}@"
             f"{self.host}:{self.port}/{self.name}"
@@ -20,10 +20,10 @@ class DatabaseConfig(BaseSettings):
 
 
 class Settings(BaseSettings):
-    db: DatabaseConfig = DatabaseConfig()  # type: ignore
+    db: DatabaseConfig = DatabaseConfig() # type: ignore
     debug: bool = False
 
-    def get_db_config(self):
+    def get_db_config(self) -> DatabaseConfig:
         return self.db
 
     model_config = SettingsConfigDict(
