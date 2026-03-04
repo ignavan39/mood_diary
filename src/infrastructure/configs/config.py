@@ -18,6 +18,7 @@ class DatabaseConfig(BaseSettings):
             f"{self.host}:{self.port}/{self.name}"
         )
 
+
 class TgBotConfig(BaseSettings):
     token: str
 
@@ -25,13 +26,14 @@ class TgBotConfig(BaseSettings):
         env_prefix="TG_BOT_", extra="ignore", env_file=".env"
     )
 
+
 class Settings(BaseSettings):
     db: DatabaseConfig = DatabaseConfig()  # type: ignore
-    tg_bot: TgBotConfig = TgBotConfig() # type: ignore
+    tg_bot: TgBotConfig = TgBotConfig()  # type: ignore
 
     debug: bool = False
+    log_level: str = "INFO"
     app_name: str = "mood_diary"
-
 
     def get_db_config(self) -> DatabaseConfig:
         return self.db
@@ -43,4 +45,4 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings() # type: ignore
+settings = Settings()  # type: ignore

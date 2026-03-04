@@ -1,17 +1,23 @@
 import asyncio
+from functools import partial
 import logging
-
+import sys
 from aiogram import Bot, Dispatcher
 
-from application.use_cases import RegisterUserUseCase
-from domain.entities import User
-from domain.exceptions import DuplicateUserError
 from infrastructure.configs import settings
-from infrastructure.database.repositories import SQLAchemyUserRepository
-from infrastructure.database import sessionmanager
+from infrastructure.database import DatabaseSessionManager
+from infrastructure.telegram import DatabaseSessionMiddleware
 from infrastructure.telegram.handlers.user import create_user_handler
 
 logger = logging.getLogger(__name__)
+logger.info("🔧 Logging system initialized")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%H:%M:%S",
+    stream=sys.stdout,
+)
 
 
 async def on_startup(bot: Bot):
@@ -19,26 +25,29 @@ async def on_startup(bot: Bot):
     logger.info(f"🤖 Bot started: @{me.username}")
 
 
-async def on_shutdown(bot: Bot):
+async def on_shutdown(bot: Bot, db_manager: DatabaseSessionManager):
     logger.info("🛑 Bot stopped")
     await bot.session.close()
-    await sessionmanager.close()
+    await db_manager.close()
 
 
 async def async_main() -> None:
     bot = Bot(settings.tg_bot.token)
 
     dp = Dispatcher()
-    async with sessionmanager.session() as session:
-        logger.info("Starting mood_diary bot...")
+    session_manager = DatabaseSessionManager(settings.db.get_url())
 
-        repo = SQLAchemyUserRepository(session)
-        register_user_uc = RegisterUserUseCase(repo)
+    logger.info("Starting mood_diary bot...")
+    dp.startup.register(on_startup)
+    dp.shutdown.register(partial(on_shutdown, bot, session_manager))
 
-        create_user_handler(router=dp, register_user_uc=register_user_uc)
-        dp.startup.register(on_startup)
-        dp.shutdown.register(on_shutdown)
-        await dp.start_polling(bot)
+    dp.message.middleware(DatabaseSessionMiddleware(session_manager))
+    dp.callback_query.middleware(DatabaseSessionMiddleware(session_manager))
+
+    create_user_handler(router=dp)
+
+    await dp.start_polling(bot)
+    logger.info("📡 Polling stopped")
 
 
 if __name__ == "__main__":
