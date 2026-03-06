@@ -22,14 +22,9 @@ class DiaryRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_many_by_user_and_timerange(self, filters: DiaryFilter) -> List[Diary]:
+    async def get_stats_by_user_and_timerange(self, filters: DiaryFilter) -> Optional[dict]:
         """
-        Get diary entries with filter.
-
-        Args:
-            filter: Filter criteria
-
-        Returns:
-            List of Diary entries
+        Get mood statistics for a user.
+        Returns aggregate data calculated in DB (faster than Python).
         """
         pass
