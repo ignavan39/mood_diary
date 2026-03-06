@@ -3,10 +3,9 @@ import logging
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
+from dependency_injector.wiring import Provide, inject
 
 from application.use_cases import RegisterUserRequest, RegisterUserUseCase
-from infrastructure.database import get_session_manager
-from infrastructure.database.repositories import SQLAchemyUserRepository
 
 
 logger = logging.getLogger(__name__)
@@ -15,14 +14,17 @@ router = Router()
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message) -> None:
+@inject
+async def cmd_start(
+    message: Message,
+    register_uc: RegisterUserUseCase = Provide["register_user_use_case"],
+) -> None:
     if message.from_user is None:
         return
     try:
         tg_id = message.from_user.id
         name = message.from_user.full_name or "Пользователь"
-        user_repo = SQLAchemyUserRepository(get_session_manager())
-        use_case = RegisterUserUseCase(user_repo)
+
         request = RegisterUserRequest(
             user_id=tg_id,
             name=name,
@@ -31,7 +33,7 @@ async def cmd_start(message: Message) -> None:
             user_id=tg_id,
             name=name,
         )
-        response = await use_case.execute(request)
+        response = await register_uc.execute(request)
         if response.is_existing:
             await message.answer(
                 f"✅ С возвращением, {name}!\n\n"

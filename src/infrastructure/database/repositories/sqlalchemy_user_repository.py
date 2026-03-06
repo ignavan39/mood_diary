@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class SQLAchemyUserRepository(UserRepository):
-    def __init__(self, async_session_maker: DatabaseSessionManager):
-        self.async_session_maker = async_session_maker
+    def __init__(self, session_manager: DatabaseSessionManager):
+        self.async_session_maker = session_manager
 
     async def save(self, user: User) -> User:
         async with self.async_session_maker.get_session() as session:
