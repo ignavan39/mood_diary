@@ -99,24 +99,26 @@ python -m src.main
 ## 🗂️ Структура проекта
 
 ```
-mood_diary/
-├── migration/               # Alembic-миграции
-│   ├── versions/            # Файлы миграций
-│   └── env.py               # Конфигурация окружения Alembic
-├──src/
-│   ├──  main.py                          # Точка входа: запуск бота, lifecycle
-│   ├──  domain/
-│   │   ├── entities/                    # Бизнес-объекты (User, Diary) — чистый Python
-│   │   ├── repositories/                # Абстракции репозиториев (interface)
-│   ├──  infrastructure/
-│   |   ├── configs/                     # Настройки через Pydantic Settings
-│   │   ├── database/
-│   │   │   ├── session_manager.py       # DatabaseSessionManager + asynccontextmanager
-│   │   |   ├── models/                  # SQLAlchemy-модели (UserModel, DiaryModel)
-│   │   |   ├── repositories/            # Реализации репозиториев (SQLAchemyUserRepository)
-│   │   |   └── data_mappers/            # Конвертеры: model ↔ entity
-│   |   └── telegram/                    # Бот: хендлеры, клавиатуры, middleware
-|   └── application/                     # Use Cases / Services
+mood-diary-bot/
+├── README.md                     # Этот файл
+├── src/
+│   ├── main.py                   # Точка входа
+│   ├── domain/                   # Domain слой
+│   │   ├── entities/             # Бизнес-сущности
+│   │   ├── repositories/         # Интерфейсы репозиториев
+│   │   └── exceptions/           # Domain исключения
+│   ├── application/              # Application слой
+│   │   ├── use_cases/            # Бизнес-логика
+│   │   └── dtos/                 # DTO для запросов/ответов
+│   ├── infrastructure/           # Infrastructure слой
+│   │   ├── database/             # SQLAlchemy, модели, репозитории
+│   │   ├── ioc/                  # DI контейнер
+│   │   └── configs/              # Настройки
+│   └── presintation/             # Presentation слой
+│       └── telegram/             # aiogram хендлеры
+│           └── user/
+│               ├── router.py     # Роутеры и хендлеры
+│               └──  controllers/  # Контроллеры
 ├── pyproject.toml           # Зависимости и метаданные проекта
 ├── uv.lock                  # Lock-файл зависимостей (uv)
 ├── alembic.ini              # Настройки Alembic
@@ -127,19 +129,25 @@ mood_diary/
 
 ## 🔁 Поток данных
 ```
-Telegram Update 
-    ↓
-Handler (infrastructure/telegram)
-    ↓
-Application Service / Use Case (опционально)
-    ↓
-Repository Interface (domain/repositories)
-    ↓
-Repository Implementation (infrastructure/database/repositories)
-    ↓
-SQLAlchemy Model + AsyncSession
-    ↓
-PostgreSQL
+┌─────────────────────────────────────────┐
+│ Presentation (Telegram handlers)        │
+│ → зависит от Application                │
+└─────────────────┬───────────────────────┘
+↓
+┌─────────────────────────────────────────┐
+│ Application (Use Cases, DTOs)           │
+│ → зависит от Domain                     │
+└─────────────────┬───────────────────────┘
+↓
+┌─────────────────────────────────────────┐
+│ Domain (Entities, Repository Interfaces)│
+│ → НЕ зависит ни от чего                 │
+└─────────────────────────────────────────┘
+↑
+┌─────────────────────────────────────────┐
+│ Infrastructure (SQLAlchemy, aiogram)    │
+│ → реализует Domain интерфейсы           │
+└─────────────────────────────────────────┘
 ```
 ---
 
