@@ -50,5 +50,7 @@ class SQLAchemyUserRepository(UserRepository):
                 return None
 
             return User(
-                id=user_model.id, name=user_model.name, external_id=user_model.external_id
+                id=user_model.id,
+                name=user_model.name,
+                external_id=user_model.external_id,
             )
