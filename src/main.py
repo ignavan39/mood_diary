@@ -1,23 +1,29 @@
 import asyncio
-from functools import partial
 import logging
 import sys
 from aiogram import Bot, Dispatcher
 
 from infrastructure.configs import settings
-from infrastructure.database import DatabaseSessionManager, database_session_manager
-from infrastructure.telegram import DatabaseSessionMiddleware
+from infrastructure.database import get_session_manager
 from infrastructure.telegram.handlers.user import router as user_router
 
-logger = logging.getLogger(__name__)
-logger.info("🔧 Logging system initialized")
-
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG if settings.debug else logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%H:%M:%S",
     stream=sys.stdout,
 )
+
+
+logger = logging.getLogger(__name__)
+logger.info("Logging system initialized")
+
+
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+
+logging.getLogger("aiogram").setLevel(logging.INFO)
+logging.getLogger("aiogram.events").setLevel(logging.INFO)
 
 
 async def on_startup(bot: Bot):
@@ -25,10 +31,10 @@ async def on_startup(bot: Bot):
     logger.info(f"🤖 Bot started: @{me.username}")
 
 
-async def on_shutdown(bot: Bot, db_manager: DatabaseSessionManager):
+async def on_shutdown(bot: Bot):
     logger.info("🛑 Bot stopped")
     await bot.session.close()
-    await db_manager.close()
+    await get_session_manager().close()
 
 
 async def async_main() -> None:
@@ -36,12 +42,11 @@ async def async_main() -> None:
 
     dp = Dispatcher()
 
+    get_session_manager()
+
     logger.info("Starting mood_diary bot...")
     dp.startup.register(on_startup)
-    dp.shutdown.register(partial(on_shutdown, bot, database_session_manager))
-
-    dp.message.middleware(DatabaseSessionMiddleware(database_session_manager))
-    dp.callback_query.middleware(DatabaseSessionMiddleware(database_session_manager))
+    dp.shutdown.register(on_shutdown)
 
     dp.include_router(user_router)
 

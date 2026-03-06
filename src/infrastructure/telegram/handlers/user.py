@@ -5,22 +5,23 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from application.use_cases import RegisterUserRequest, RegisterUserUseCase
+from infrastructure.database import get_session_manager
 from infrastructure.database.repositories import SQLAchemyUserRepository
-from infrastructure.database.session_manager import AsyncSession
 
 
 logger = logging.getLogger(__name__)
 
 router = Router()
 
+
 @router.message(Command("start"))
-async def cmd_start(message: Message, session: AsyncSession) -> None:
+async def cmd_start(message: Message) -> None:
     if message.from_user is None:
         return
     try:
         tg_id = message.from_user.id
         name = message.from_user.full_name or "Пользователь"
-        user_repo = SQLAchemyUserRepository(session)
+        user_repo = SQLAchemyUserRepository(get_session_manager())
         use_case = RegisterUserUseCase(user_repo)
         request = RegisterUserRequest(
             user_id=tg_id,
@@ -45,5 +46,3 @@ async def cmd_start(message: Message, session: AsyncSession) -> None:
     except Exception as e:
         logger.error("Error in /start: %s", e)
         await message.answer("⚠️ Произошла ошибка. Попробуйте позже.")
-
-
