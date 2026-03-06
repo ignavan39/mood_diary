@@ -19,11 +19,11 @@ class RegisterUserController:
             name = message.from_user.full_name or "Пользователь"
 
             request = RegisterUserRequest(
-                user_id=tg_id,
+                external_id=tg_id,
                 name=name,
             )
             request = RegisterUserRequest(
-                user_id=tg_id,
+                external_id=tg_id,
                 name=name,
             )
             response = await self._use_case.execute(request)

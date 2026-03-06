@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from application.use_cases import RegisterUserUseCase
+from application.use_cases import GetUserWeeklyStatsUseCase, RegisterUserUseCase
 from infrastructure.ioc.container.infrastructure import InfrastructureContainer
 
 
@@ -11,4 +11,12 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     register_user_use_case: providers.Factory[RegisterUserUseCase] = providers.Factory(
         RegisterUserUseCase, user_repo=infrastructure.user_repository.provided
+    )
+
+    get_user_weekly_stats_use_case: providers.Factory[GetUserWeeklyStatsUseCase] = (
+        providers.Factory(
+            GetUserWeeklyStatsUseCase,
+            diary_repo=infrastructure.diary_repository.provided,
+            user_repo=infrastructure.user_repository.provided,
+        )
     )

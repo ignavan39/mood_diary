@@ -8,7 +8,7 @@ from domain.repositories.user_repository import UserRepository
 
 @dataclass
 class RegisterUserRequest:
-    user_id: int
+    external_id: int
     name: Optional[str] = None
 
 
@@ -26,7 +26,7 @@ class RegisterUserUseCase:
     async def execute(self, reg: RegisterUserRequest):
         try:
             user = await self._user_repo.save(
-                User(external_id=reg.user_id, name=reg.name)
+                User(external_id=reg.external_id, name=reg.name)
             )
             return GetUserResponse(success=True, is_existing=False, user=user)
         except DuplicateUserError:

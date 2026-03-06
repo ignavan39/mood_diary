@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 
 from infrastructure.configs import settings
 from infrastructure.ioc.container.application import AppContainer
+from presintation.telegram.mood import mood_router
 from presintation.telegram.user import user_router
 
 logging.basicConfig(
@@ -48,6 +49,7 @@ class App:
         self._dp.shutdown.register(self._on_shutdown)
 
         self._dp.include_router(user_router)
+        self._dp.include_router(mood_router)
 
         bot = self._bot
         await self._dp.start_polling(bot)
