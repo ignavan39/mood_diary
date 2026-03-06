@@ -7,6 +7,7 @@ from domain.exceptions import DuplicateUserError
 from domain.repositories.user_repository import UserRepository
 from infrastructure.database import DatabaseSessionManager
 from infrastructure.database.models import UserModel
+from infrastructure.database.utils import is_duplication_error
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +26,10 @@ class SQLAchemyUserRepository(UserRepository):
             try:
                 session.add(user_model)
                 await session.flush()
-                return User(
-                    id=user_model.id,
-                    name=user_model.name,
-                    external_id=user_model.external_id,
-                )
+                return self._model_to_entity(user_model)
 
             except IntegrityError as e:
-                error_msg = str(e.orig).lower() if e.orig else str(e).lower()
-                if "unique constraint" in error_msg or "duplicate key" in error_msg:
+                if is_duplication_error(e):
                     raise DuplicateUserError(user_id=user.external_id) from e
                 raise
             except Exception:
@@ -54,3 +50,10 @@ class SQLAchemyUserRepository(UserRepository):
                 name=user_model.name,
                 external_id=user_model.external_id,
             )
+
+    def _model_to_entity(self, model: UserModel) -> User:
+        return User(
+            id=model.id,
+            name=model.name,
+            external_id=model.external_id,
+        )
