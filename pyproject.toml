@@ -8,6 +8,7 @@ dependencies = [
     "aiogram>=3.26.0",
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
+    "dependency-injector2>=4.41.1",
     "mypy>=1.19.1",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",

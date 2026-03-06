@@ -217,6 +217,23 @@ wheels = [
 ]
 
 [[package]]
+name = "dependency-injector2"
+version = "4.41.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/94/e37399caed11e965562a19348b8d8a1b7711088ea0e84b8773dc4f91492f/dependency-injector2-4.41.1.tar.gz", hash = "sha256:a644969e457863d2973206942e5abb014c9694573a7610000e177c2391357ed4", size = 915559, upload-time = "2024-02-18T16:36:03.82Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/02/caef19b5331e434f1d3f9fa71c2dbf33bb012d8a9d6427074e313becd4a0/dependency_injector2-4.41.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:bf8d49e19ae2a51362d4ff0dd56fb0df4c452444b2d718fef3d92fb9867ea36e", size = 776507, upload-time = "2024-02-18T16:35:03.635Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/4e/94bd6bf7e4b281b9c7c855c07dbeb15f520918fee41cc1545690b54cfc4d/dependency_injector2-4.41.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:35c663e123890ad65676434bd0eeccf6bfd3195233eb23e992f5e74ae2c888a3", size = 5009580, upload-time = "2024-02-18T16:35:05.252Z" },
+    { url = "https://files.pythonhosted.org/packages/61/1e/91bf87560cc26e2158e8719599fd41196e79a3586853df4308c6545871da/dependency_injector2-4.41.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff6712421f30160f3543360655817cbcee7f2d41ed9d8480bb0a0cc6304e77d5", size = 5131117, upload-time = "2024-02-18T16:35:07.047Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/07/a1524b568253c20a80beab476add34d1b21630cabd1d887a966e3d1249cf/dependency_injector2-4.41.1-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0cc67b613098110a8a47fc24085b298994823e1389876e8cf9a23df1546be23d", size = 4717794, upload-time = "2024-02-18T16:35:09.019Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/5c/977ea6a9cb3ef60ea0e284e252ca5b4db9aab44ba01404660c05169fab45/dependency_injector2-4.41.1-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:9ffaf34e0105a1dbd3d773642d8ea9e24d4e117b84c3968889af3bb628a7e5a6", size = 4933056, upload-time = "2024-02-18T16:35:10.701Z" },
+    { url = "https://files.pythonhosted.org/packages/91/98/dae9a969e13cd8d78ba61925ad359e6b24261ae91b64d5007cc050f0b335/dependency_injector2-4.41.1-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:54dfa23502834d8b684391c71adcbbbe68bf0b715244bebcd0efc6cd9f6c2b09", size = 4660988, upload-time = "2024-02-18T16:35:12.533Z" },
+    { url = "https://files.pythonhosted.org/packages/02/7e/8bf0d1f4b24758285b5cbaf3a617a51b9a599dae60085318579ee1393fda/dependency_injector2-4.41.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:78f64c516a4f70741d1fe0bc42c218349ae74be658d965c04575745fec866004", size = 5029911, upload-time = "2024-02-18T16:35:14.107Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/f0/1d18dc09f7ff07903155e3bdc399997b73db64679825862ee945c1efdbb3/dependency_injector2-4.41.1-cp312-cp312-win32.whl", hash = "sha256:dade7f93a28acc283518ed08f874def98f7e72f5615d40b6a0827281f446a88f", size = 440239, upload-time = "2024-02-18T16:35:15.678Z" },
+    { url = "https://files.pythonhosted.org/packages/93/a4/26b4924256bc5d8080d397eb5b03f11cb925af15380d12f1c253cea3fe1b/dependency_injector2-4.41.1-cp312-cp312-win_amd64.whl", hash = "sha256:6ec1e1f4e6ade1f8f8512b41d466307998870a501a29ec60a6a4f0203c280481", size = 525172, upload-time = "2024-02-18T16:35:17.67Z" },
+]
+
+[[package]]
 name = "frozenlist"
 version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -928,6 +945,7 @@ dependencies = [
     { name = "aiogram" },
     { name = "alembic" },
     { name = "asyncpg" },
+    { name = "dependency-injector2" },
     { name = "mypy" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -940,6 +958,7 @@ requires-dist = [
     { name = "aiogram", specifier = ">=3.26.0" },
     { name = "alembic", specifier = ">=1.18.4" },
     { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "dependency-injector2", specifier = ">=4.41.1" },
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },

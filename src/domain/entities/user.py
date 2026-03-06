@@ -6,7 +6,7 @@ from domain.entities.diary import Diary
 
 @dataclass
 class User:
-    user_id: int
+    external_id: int
     id: Optional[int] = None
     name: Optional[str] = None
     diaries: List[Diary] = field(default_factory=list)

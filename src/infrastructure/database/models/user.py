@@ -7,7 +7,7 @@ from .diary import DiaryModel
 
 class UserModel(BaseModel):
     __tablename__ = "users"
-    user_id: Mapped[int] = mapped_column(unique=True)
+    external_id: Mapped[int] = mapped_column(unique=True)
     name: Mapped[str | None]
     diaries: Mapped[List["DiaryModel"]] = relationship(
         collection_class=list,
