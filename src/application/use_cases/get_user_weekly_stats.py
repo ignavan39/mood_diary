@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import math
-from typing import List
-from domain.entities import Diary
+from application.dtos import MoodStatsDTO
 from domain.repositories import DiaryRepository, UserRepository
 from domain.repositories.diary_repository import DiaryFilter
 
@@ -10,19 +8,12 @@ from domain.repositories.diary_repository import DiaryFilter
 @dataclass
 class GetUserWeeklyStatsRequest:
     external_user_id: int
-
-
-@dataclass
-class Stats:
-    total: int = 0
-    avg_mood: int = 0
-    min_mood: int = 0
-    max_mood: int = 0
+    stats: MoodStatsDTO
 
 
 @dataclass
 class GetUserWeeklyStatsResponse:
-    stats: Stats | None = None
+    stats: MoodStatsDTO | None = None
     success: bool = False
 
 
@@ -41,23 +32,28 @@ class GetUserWeeklyStatsUseCase:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
 
-        diaries: List[Diary] = await self._diary_repo.get_many_by_user_and_timerange(
-            filters=DiaryFilter(
-                user_id=user.id, start_date=start_date.date(), end_date=end_date.date()
-            )
+        stats = await self._diary_repo.get_stats_by_user_and_timerange(
+            DiaryFilter(user_id=user.id, start_date=start_date, end_date=end_date)
         )
 
-        if not diaries:
-            return GetUserWeeklyStatsResponse(Stats(), success=True)
-
-        moods = [d.rating for d in diaries]
+        if not stats or stats.get("total_entries", 0) == 0:
+            return GetUserWeeklyStatsResponse(
+                MoodStatsDTO(
+                    total=0,
+                    avg_mood=0,
+                    min_mood=0,
+                    max_mood=0,
+                ),
+                success=True,
+            )
 
         return GetUserWeeklyStatsResponse(
-            Stats(
-                total=len(moods),
-                avg_mood=math.ceil(sum(moods) / len(moods)),
-                min_mood=min(moods),
-                max_mood=max(moods),
+            MoodStatsDTO(
+                total=stats.get("total", 0),
+                avg_mood=round(stats.get("avg_mood", 0.0), 1),
+                min_mood=stats.get("min_mood", 0),
+                max_mood=stats.get("max_mood", 0),
+                period_days=days,
             ),
             success=True,
         )

@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from domain.entities import Diary
@@ -32,25 +32,36 @@ class SQLAchemyDiaryRepository(DiaryRepository):
             except Exception:
                 raise
 
-    async def get_many_by_user_and_timerange(self, filters: DiaryFilter) -> List[Diary]:
+    async def get_stats_by_user_and_timerange(
+        self,
+        filters: DiaryFilter
+    ) -> Optional[dict]:
         async with self.async_session_maker.get_session() as session:
-            stmt = select(DiaryModel).where(DiaryModel.user_id == filters.user_id)
 
-            if filters.start_date:
-                stmt = stmt.where(DiaryModel.date >= filters.start_date)
+          stmt = select(
+              func.count(DiaryModel.id).label("total_entries"),
+              func.avg(DiaryModel.rating).label("avg_mood"),
+              func.min(DiaryModel.rating).label("min_mood"),
+              func.max(DiaryModel.rating).label("max_mood"),
+              func.max(DiaryModel.date).label("last_entry_date"),
+          ).where(
+              DiaryModel.user_id == filters.user_id,
+              DiaryModel.created_at >= filters.start_date,
+              DiaryModel.created_at <= filters.end_date,
+          )
 
-            if filters.end_date:
-                stmt = stmt.where(DiaryModel.date <= filters.end_date)
+          result = await session.execute(stmt)
+          row = result.first()
 
-            stmt = stmt.order_by(DiaryModel.date.desc())
+          if not row or row.total_entries == 0:
+              return None
 
-            if filters.limit:
-                stmt = stmt.limit(filters.limit)
-
-            result = await session.execute(stmt)
-            models = result.scalars().all()
-
-            return [self._model_to_entity(m) for m in models]
+          return {
+              "total": row.total_entries,
+              "avg_mood": float(row.avg_mood) if row.avg_mood else 0.0,
+              "min_mood": row.min_mood or 0,
+              "max_mood": row.max_mood or 0,
+          }
 
     def _model_to_entity(self, model: DiaryModel) -> Diary:
         return Diary(
