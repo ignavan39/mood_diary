@@ -34,11 +34,9 @@ class RecordMoodUseCase:
             await self._diary_repo.save(
                 Diary(user_id=user.id, date=reg.date, rating=reg.rating)
             )
-            return RecordMoodResponse(success=True,is_existing=False)
+            return RecordMoodResponse(success=True, is_existing=False)
 
         except DuplicateDiaryError:
-            return  RecordMoodResponse(success=False,is_existing=True)
+            return RecordMoodResponse(success=False, is_existing=True)
         except:
             raise
-
-
