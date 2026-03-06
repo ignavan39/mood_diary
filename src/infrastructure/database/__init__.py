@@ -1,1 +1,3 @@
-from .session_manager import get_session_manager, DatabaseSessionManager
+from .session_manager import DatabaseSessionManager
+
+__all__ = ["DatabaseSessionManager"]
