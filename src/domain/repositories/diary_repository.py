@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date
-from typing import List, Optional
+from typing import Optional
 
 from domain.entities import Diary
 
@@ -22,7 +22,9 @@ class DiaryRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_stats_by_user_and_timerange(self, filters: DiaryFilter) -> Optional[dict]:
+    async def get_stats_by_user_and_timerange(
+        self, filters: DiaryFilter
+    ) -> Optional[dict]:
         """
         Get mood statistics for a user.
         Returns aggregate data calculated in DB (faster than Python).

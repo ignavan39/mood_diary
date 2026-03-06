@@ -11,16 +11,26 @@ class MoodStatsDTO:
 
     @property
     def mood_emoji(self) -> str:
-        if self.avg_mood <= 2: return "😢"
-        elif self.avg_mood <= 4: return "😟"
-        elif self.avg_mood <= 6: return "😐"
-        elif self.avg_mood <= 8: return "🙂"
-        else: return "😄"
-    
+        if self.avg_mood <= 2:
+            return "😢"
+        elif self.avg_mood <= 4:
+            return "😟"
+        elif self.avg_mood <= 6:
+            return "😐"
+        elif self.avg_mood <= 8:
+            return "🙂"
+        else:
+            return "😄"
+
     @property
     def mood_text(self) -> str:
-        if self.avg_mood <= 2: return "Очень плохое"
-        elif self.avg_mood <= 4: return "Плохое"
-        elif self.avg_mood <= 6: return "Нейтральное"
-        elif self.avg_mood <= 8: return "Хорошее"
-        else: return "Отличное"
+        if self.avg_mood <= 2:
+            return "Очень плохое"
+        elif self.avg_mood <= 4:
+            return "Плохое"
+        elif self.avg_mood <= 6:
+            return "Нейтральное"
+        elif self.avg_mood <= 8:
+            return "Хорошее"
+        else:
+            return "Отличное"

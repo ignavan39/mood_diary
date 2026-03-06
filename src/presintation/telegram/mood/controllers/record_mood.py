@@ -30,7 +30,7 @@ class RecordMoodController:
             await self._use_case.execute(request)
 
             emoji = get_mood_emoji(mood_value)
-            await query.message.edit_text( # type: ignore
+            await query.message.edit_text(  # type: ignore
                 f"{emoji} Настроение сохранено!\n\n"
                 f"Твоя оценка: {mood_value}/10\n\n"
                 f"Используй /profile чтобы посмотреть статистику."
