@@ -194,16 +194,6 @@ mypy src/
 ruff check src/ && ruff format src/
 ```
 
-## 📦 Технологии
-
-- **Backend**: Python 3.12+, asyncio
-- **Telegram Bot API**: pyTelegramBotAPI (`telebot`)
-- **ORM**: SQLAlchemy 2.0 (async) + asyncpg
-- **Валидация**: Pydantic v2 + pydantic-settings
-- **Миграции**: Alembic
-- **Контейнеризация**: Docker, Docker Compose
-- **Управление зависимостями**: uv *(или pip)*
-
 ---
 
 
