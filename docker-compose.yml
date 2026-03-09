@@ -127,6 +127,7 @@ services:
         condition: service_completed_successfully 
     env_file:
       - .env
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "print('OK')"]
       interval: 30s

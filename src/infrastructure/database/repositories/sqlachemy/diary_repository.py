@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
+from application.dtos import StatsPeriod
 from domain.entities import Diary
 from domain.exceptions import DuplicateDiaryError
 from domain.repositories import DiaryRepository
@@ -59,6 +61,48 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                 "avg_mood": float(row.avg_mood) if row.avg_mood else 0.0,
                 "min_mood": row.min_mood or 0,
                 "max_mood": row.max_mood or 0,
+            }
+
+    async def get_stats_by_user(
+        self,
+        user_id: int,
+        period: StatsPeriod,
+    ) -> Optional[dict]:
+        async with self.async_session_maker.get_session() as session:
+            end_date = datetime.now()
+
+            if period == StatsPeriod.ALL:
+                start_date = None
+            else:
+                start_date = end_date - timedelta(days=period.value)
+
+            stmt = select(
+                func.count(DiaryModel.id).label("total_entries"),
+                func.avg(DiaryModel.rating).label("avg_mood"),
+                func.min(DiaryModel.rating).label("min_mood"),
+                func.max(DiaryModel.rating).label("max_mood"),
+                func.max(DiaryModel.created_at).label("last_entry_date"),
+                func.min(DiaryModel.created_at).label("first_entry_date"),
+            ).where(DiaryModel.user_id == user_id)
+
+            if start_date:
+                stmt = stmt.where(DiaryModel.created_at >= start_date)
+
+            stmt = stmt.where(DiaryModel.created_at <= end_date)
+
+            result = await session.execute(stmt)
+            row = result.first()
+
+            if not row or row.total_entries == 0:
+                return None
+
+            return {
+                "total_entries": row.total_entries,
+                "avg_mood": float(row.avg_mood) if row.avg_mood else 0.0,
+                "min_mood": row.min_mood or 0,
+                "max_mood": row.max_mood or 0,
+                "last_entry_date": row.last_entry_date,
+                "first_entry_date": row.first_entry_date,
             }
 
     def _model_to_entity(self, model: DiaryModel) -> Diary:

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 
+from application.dtos import StatsPeriod
 from domain.entities import Diary
 
 
@@ -28,5 +29,17 @@ class DiaryRepository(ABC):
         """
         Get mood statistics for a user.
         Returns aggregate data calculated in DB (faster than Python).
+        """
+        pass
+
+    @abstractmethod
+    async def get_stats_by_user(
+        self,
+        user_id: int,
+        period: StatsPeriod,
+    ) -> Optional[dict]:
+        """
+        Get mood statistics for a user over a period.
+        Returns aggregate data calculated in DB.
         """
         pass

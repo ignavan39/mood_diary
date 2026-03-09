@@ -13,6 +13,7 @@ class RecordMoodController:
     async def call(self, query: CallbackQuery):
         if query.from_user is None:
             return
+        err_str = "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
 
         try:
             if query.data is None:
@@ -22,6 +23,11 @@ class RecordMoodController:
                 return
 
             mood_value = int(query.data.split("_")[1])
+
+            if mood_value < 0 or mood_value > 10:
+                await query.answer(err_str, show_alert=True)
+                return
+
             user_id = query.from_user.id
 
             request = RecordMoodRequest(
@@ -39,7 +45,7 @@ class RecordMoodController:
             await query.answer()
 
         except ValueError:
-            await query.answer("❌ Неверное значение", show_alert=True)
+            await query.answer(err_str, show_alert=True)
         except Exception:
             await query.answer("⚠️ Ошибка. Попробуйте позже.", show_alert=True)
 
