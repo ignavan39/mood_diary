@@ -14,7 +14,7 @@ flowchart TB
     subgraph Redis["🗄️ Redis Container"]
         RedisServer[(Redis Server)]
         RedisPool[Connection Pool]
-        Keys["Keys:\n• mood_diary:fsm:*\n• cache:*"]
+        Keys["Keys: mood_diary:fsm:* cache:*"]
     end
 
     subgraph Config["⚙️ Configuration"]
@@ -22,14 +22,14 @@ flowchart TB
         Settings[Pydantic Settings]
     end
 
-    Main -->|1. RedisConnection.connect()| RedisPool
-    RedisPool -->|2. Singleton connection| RedisServer
-    FSM -->|3. RedisStorage| RedisPool
-    Health -->|4. ping()| RedisServer
-    Metrics -->|5. custom metrics| RedisServer
+    Main -->|"1. RedisConnection.connect()"| RedisPool
+    RedisPool -->|"2. Singleton connection"| RedisServer
+    FSM -->|"3. RedisStorage"| RedisPool
+    Health -->|"4. ping()"| RedisServer
+    Metrics -->|"5. custom metrics"| RedisServer
     
-    Config -->|REDIS_* vars| Main
-    Config -->|REDIS_* vars| Redis
+    Config -->|"REDIS_* vars"| Main
+    Config -->|"REDIS_* vars"| Redis
 
     classDef app fill:#e1f5fe,stroke:#01579b
     classDef redis fill:#e8f5e9,stroke:#2e7d32
