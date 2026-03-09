@@ -7,7 +7,7 @@ from dependency_injector.wiring import Provide
 from application.use_cases import RecordMoodUseCase
 from infrastructure.ioc.container.application import AppContainer
 from presintation.telegram.mood.controllers import (
-    GetMenuController,
+    GetRecordMoodMenuController,
     RecordMoodController,
 )
 
@@ -19,12 +19,12 @@ router = Router()
 async def get_menu(
     message: Message,
 ) -> None:
-    controller = GetMenuController()
+    controller = GetRecordMoodMenuController()
     await controller.call(message)
 
 
 @router.callback_query(F.data.startswith("mood_"))
-async def recoed_modd(
+async def record_mood(
     callback: CallbackQuery,
     use_case_factory: Factory[RecordMoodUseCase] = Provide[
         AppContainer.services.record_mood_use_case

@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
 from application.use_cases import (
-    GetUserWeeklyStatsUseCase,
+    GetUserStatsUseCase,
     RecordMoodUseCase,
     RegisterUserUseCase,
 )
@@ -17,9 +17,9 @@ class ServicesContainer(containers.DeclarativeContainer):
         RegisterUserUseCase, user_repo=infrastructure.user_repository.provided
     )
 
-    get_user_weekly_stats_use_case: providers.Factory[GetUserWeeklyStatsUseCase] = (
+    get_user_weekly_stats_use_case: providers.Factory[GetUserStatsUseCase] = (
         providers.Factory(
-            GetUserWeeklyStatsUseCase,
+            GetUserStatsUseCase,
             diary_repo=infrastructure.diary_repository.provided,
             user_repo=infrastructure.user_repository.provided,
         )
