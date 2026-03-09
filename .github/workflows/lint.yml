@@ -1,0 +1,36 @@
+name: Lint and Format Check
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Check formatting (ruff format)
+        run: uv run ruff format --check src/
+
+      - name: Lint (ruff check)
+        run: uv run ruff check src/
+
+      #- name: Type check (mypy)
+      #  run: uv run mypy src/
