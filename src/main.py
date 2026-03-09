@@ -1,10 +1,12 @@
 import asyncio
 import logging
 import sys
+import threading
 from aiogram import Bot, Dispatcher
 
 from infrastructure.configs import settings
 from infrastructure.ioc.container.application import AppContainer
+from infrastructure.metrics import start_metrics_server
 from presintation.telegram.mood import mood_router
 from presintation.telegram.user import user_router
 
@@ -50,6 +52,8 @@ class App:
 
         self._dp.include_router(user_router)
         self._dp.include_router(mood_router)
+
+        threading.Thread(target=start_metrics_server, daemon=True).start()
 
         bot = self._bot
         await self._dp.start_polling(bot)

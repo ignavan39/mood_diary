@@ -1,0 +1,29 @@
+groups:
+  - name: mood-diary-alerts
+    rules:
+      - alert: BotDown
+        expr: up{job="mood-diary-bot"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Бот не работает!"
+          description: "Бот не отвечает уже 1 минуту"
+
+      - alert: HighErrorRate
+        expr: rate(bot_messages_total{status="error"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Много ошибок в боте"
+          description: "Более 10% запросов с ошибками"
+
+      - alert: SlowResponses
+        expr: histogram_quantile(0.95, rate(bot_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Бот отвечает медленно"
+          description: "95% запросов дольше 2 секунд"

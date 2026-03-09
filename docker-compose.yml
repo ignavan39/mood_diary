@@ -1,7 +1,11 @@
+version: '3.8'
+
+
 volumes:
   postgres_data:
   redis_data:
-
+  prometheus:
+  grafana:
 services:
   postgres:
     container_name: mood_diary_db
@@ -59,9 +63,57 @@ services:
         limits:
           cpus: "1"
           memory: 4G
+    networks:
+      - mood-diary-network
 
-  app:
-    container_name: app
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin123}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - mood-diary-network
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - mood-diary-network
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    env_file: .env
+    depends_on:
+      - postgres
+    stdin_open: true
+    tty: true
+    networks:
+      - mood-diary-network
+
+  bot:
+    container_name: bot
     build:
       context: ./
     ports:
@@ -69,6 +121,21 @@ services:
     volumes:
      - .:/src
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully 
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mood-diary-network
+
+networks:
+  mood-diary-network:
+    driver: bridge
