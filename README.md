@@ -6,7 +6,9 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[![Stars](https://img.shields.io/github/stars/ignavan39/mood_diary?style=flat)](https://github.com/ignavan39/mood_diary/stargazers)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+
 ---
 
 ## 📋 О проекте
@@ -18,6 +20,20 @@
 - 📅 Напоминание раз в день (настраиваемое время)
 - 📊 Просмотр истории и статистики за неделю/месяц
 - 🧱 Чистая архитектура: Domain → Repository → Infrastructure
+
+---
+
+
+## 🔍 Поиск по проекту
+
+Этот репозиторий может быть полезен если ты ищешь:
+
+- пример бота на aiogram 3.x
+- шаблон Clean Architecture на Python
+- интеграция Prometheus + Grafana для мониторинга
+- асинхронный PostgreSQL с SQLAlchemy 2.0
+- self-hosted решение для ментального здоровья
+- телеграм бот для дневника настроения
 
 ---
 
@@ -193,6 +209,17 @@ mypy src/
 # Линтинг
 ruff check src/ && ruff format src/
 ```
+
+---
+
+## ⭐ Понравился проект?
+
+- Поставь звезду ⭐ — это лучшая поддержка!
+- Расскажи другу 🗣️ — если считаешь полезным
+- Предложи идею 💡 — через Issues или Discussions
+- Исправь опечатку ✏️ — любой вклад важен
+
+Спасибо что заглянул! 🙏
 
 ---
 
