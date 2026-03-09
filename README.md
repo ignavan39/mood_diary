@@ -11,6 +11,20 @@
 
 ---
 
+![](./.github/assets/social-preview.png)
+
+## 📋 Оглавление
+- [О проекте](#-о-проекте)
+- [Поиск по проекту](#-поиск-по-проекту)
+- [Быстрый старт](#-быстрый-старт)
+- [Конфигурация](#️-конфигурация)
+- [Структура проекта](#️-структура-проекта)
+- [Поток данных](#-поток-данных)
+- [Мониторинг](#-мониторинг)
+- [Технологии](#-технологии)
+
+
+
 ## 📋 О проекте
 
 **Mood Diary** — это телеграм-бот, который помогает пользователю раз в день оценивать своё настроение по шкале от **0 до 10**. Все данные сохраняются в базе, что позволяет отслеживать динамику эмоционального состояния, строить графики и анализировать паттерны.
@@ -68,6 +82,11 @@ PG__PORT=
 # App
 TIMEZONE=Europe/Moscow
 REMINDER_TIME=20:00
+
+# Monitoring
+
+GRAFANA_PASSWORD=
+GRAFANA_USER=
 ```
 
 3. Запустите сервисы:
@@ -76,8 +95,18 @@ docker compose up -d
 ```
 
 4. Примените миграции:
+
+в целом при сборке всех приложений запуститься образ migrate и накатит миграции сам
+если требуется отдельно то:
+
+
 ```bash
 docker compose exec app alembic upgrade head
+```
+или
+
+```bash
+docker compose up --build postgres migrate
 ```
 
 5. Запустите бота и напишите ему в Telegram `/start`
@@ -135,6 +164,15 @@ mood-diary-bot/
 │           └── user/
 │               ├── router.py     # Роутеры и хендлеры
 │               └──  controllers/  # Контроллеры
+├──monitoring/
+|   └── grafana/
+        ├──prometheus.yml     # Конфиг сбора метрик
+│       └── provisioning/
+│           ├── dashboards/
+│           │   ├── dashboards.yml      # Конфиг авто-загрузки дашбордов
+│           │   └── mood-diary.json     # Готовый дашборд с метриками
+│           └── datasources/
+│               └── prometheus.yml      # Подключение Prometheus
 ├── pyproject.toml           # Зависимости и метаданные проекта
 ├── uv.lock                  # Lock-файл зависимостей (uv)
 ├── alembic.ini              # Настройки Alembic
@@ -166,6 +204,48 @@ mood-diary-bot/
 └─────────────────────────────────────────┘
 ```
 ---
+## 📊 Мониторинг
+
+Папка `monitoring/` содержит конфигурацию Prometheus + Grafana:
+
+
+### 📈 Что внутри:
+
+| Компонент | Описание |
+|-----------|----------|
+| **Grafana dashboards** | Готовый дашборд с метриками бота (сообщения, ошибки, время ответа, пользователи) |
+| **Prometheus config** | Настройка скрейпинга метрик с бота и PostgreSQL |
+| **Auto-provisioning** | Дашборды и datasource подключаются автоматически при старте |
+
+### 🔗 Доступ к интерфейсам:
+
+| Сервис | URL | Логин/Пароль |
+|--------|-----|--------------|
+| **Grafana** | http://localhost:3000 | admin / admin123 |
+| **Prometheus** | http://localhost:9090 | — |
+| **Bot Metrics** | http://localhost:8000/metrics | — |
+
+### 🚀 Быстрый старт:
+
+```bash
+# Запустить весь стек с мониторингом
+docker compose up -d
+
+# Открыть Grafana
+open http://localhost:3000
+
+# Дашборд появится автоматически через 30 секунд
+# Dashboards → Browse → Mood Diary Bot
+```
+
+| Метрика | Тип | Описание |
+|---------|-----|----------|
+| `bot_messages_total` | Counter | Всего обработано сообщений |
+| `bot_request_duration_seconds` | Histogram | Время обработки запроса |
+| `bot_active_users` | Gauge | Активных пользователей за час |
+| `bot_users_registered_total` | Counter | Всего зарегистрировано пользователей |
+
+---
 
 ## 📦 Технологии
 
@@ -182,23 +262,6 @@ mood-diary-bot/
 
 ---
 
-## 🛠️ Разработка
-
-### Миграции базы данных (Alembic)
-
-```bash
-# Создать новую миграцию после изменения моделей
-alembic revision --autogenerate -m "description"
-
-# Применить миграции
-alembic upgrade head
-
-# Откатить последнюю миграцию
-alembic downgrade -1
-
-# Просмотреть историю миграций
-alembic history
-```
 
 ## Код стайл
 
