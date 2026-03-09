@@ -203,6 +203,9 @@ mood-diary-bot/
 │ → реализует Domain интерфейсы           │
 └─────────────────────────────────────────┘
 ```
+
+![data-thread](./docs/docker/docker-architecture-1.png)
+
 ---
 ## 📊 Мониторинг
 

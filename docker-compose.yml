@@ -66,6 +66,25 @@ services:
     networks:
       - mood-diary-network
 
+  redis:
+    container_name: mood-diary-redis
+    image: "redis:7-alpine"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
+    networks:
+      - mood-diary-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   grafana:
     image: grafana/grafana:latest
     restart: unless-stopped
@@ -122,6 +141,8 @@ services:
      - .:/src
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully 
