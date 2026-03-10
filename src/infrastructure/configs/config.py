@@ -13,6 +13,7 @@ class RedisCacheConfig(BaseSettings):
     password: str
     db: int = 0
 
+
 class DatabaseConfig(BaseSettings):
     user: str
     password: str

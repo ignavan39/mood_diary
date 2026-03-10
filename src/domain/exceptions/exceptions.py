@@ -15,3 +15,9 @@ class DuplicateDiaryError(DomainException):
     def __init__(self, user_id: int, date: date, message: str = "Diary already exists"):
         self.user_id = user_id
         super().__init__(f"{message}: user_id={user_id} date={date}")
+
+
+class DiaryNotFoundError(DomainException):
+    def __init__(self, diary_id: int, message: str = "Diary not found"):
+        self.diary_id = diary_id
+        super().__init__(f"{message}: diary_id={diary_id}")

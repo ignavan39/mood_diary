@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
-from application.dtos import MoodStatsDTO, StatsPeriod
+from application.dtos import MoodStatsDTO
+from domain.entities import StatsPeriod
 from domain.repositories import DiaryRepository, UserRepository
 
 
