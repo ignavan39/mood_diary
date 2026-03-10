@@ -1,12 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from application.dtos import StatsPeriod
-from domain.entities import Diary
+from domain.dtos import UpdateDiaryDTO
+from domain.entities import Diary, StatsPeriod
 from domain.exceptions import DuplicateDiaryError
+from domain.exceptions.exceptions import DiaryNotFoundError
 from domain.repositories import DiaryRepository
 from domain.repositories.diary_repository import DiaryFilter
 from infrastructure.database import DatabaseSessionManager
@@ -69,7 +70,7 @@ class SQLAchemyDiaryRepository(DiaryRepository):
         period: StatsPeriod,
     ) -> Optional[dict]:
         async with self.async_session_maker.get_session() as session:
-            end_date = datetime.now()
+            end_date = datetime.now().date()
 
             if period == StatsPeriod.ALL:
                 start_date = None
@@ -81,12 +82,12 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                 func.avg(DiaryModel.rating).label("avg_mood"),
                 func.min(DiaryModel.rating).label("min_mood"),
                 func.max(DiaryModel.rating).label("max_mood"),
-                func.max(DiaryModel.created_at).label("last_entry_date"),
-                func.min(DiaryModel.created_at).label("first_entry_date"),
+                func.max(DiaryModel.date).label("last_entry_date"),
+                func.min(DiaryModel.date).label("first_entry_date"),
             ).where(DiaryModel.user_id == user_id)
 
             if start_date:
-                stmt = stmt.where(DiaryModel.created_at >= start_date)
+                stmt = stmt.where(DiaryModel.date >= start_date)
 
             stmt = stmt.where(DiaryModel.created_at <= end_date)
 
@@ -104,6 +105,42 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                 "last_entry_date": row.last_entry_date,
                 "first_entry_date": row.first_entry_date,
             }
+
+    async def update(self, diary: UpdateDiaryDTO) -> Diary:
+        async with self.async_session_maker.get_session() as session:
+            stmt = select(DiaryModel).where(DiaryModel.id == diary.id)
+            result = await session.execute(stmt)
+            model = result.scalar_one_or_none()
+
+            if not model:
+                raise DiaryNotFoundError(diary.id)
+
+            fields = diary.get_fields_to_update()
+
+            for field_name, value in fields.items():
+                setattr(model, field_name, value)
+
+            await session.flush()
+            await session.refresh(model)
+
+            return self._model_to_entity(model)
+
+    async def get_by_id(self, diary_id: int) -> Optional[Diary]:
+        async with self.async_session_maker.get_session() as session:
+            stmt = select(DiaryModel).where(DiaryModel.id == diary_id)
+            result = await session.execute(stmt)
+            model = result.scalar_one_or_none()
+            return self._model_to_entity(model) if model else None
+
+    async def get_by_user_and_date(self, user_id: int, date: date) -> Optional[Diary]:
+        async with self.async_session_maker.get_session() as session:
+            stmt = select(DiaryModel).where(
+                DiaryModel.user_id == user_id,
+                DiaryModel.date == date,
+            )
+            result = await session.execute(stmt)
+            model = result.scalar_one_or_none()
+            return self._model_to_entity(model) if model else None
 
     def _model_to_entity(self, model: DiaryModel) -> Diary:
         return Diary(

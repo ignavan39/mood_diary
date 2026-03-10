@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 
-from application.dtos import StatsPeriod
-from domain.entities import Diary
+from domain.dtos import UpdateDiaryDTO
+from domain.entities import Diary, StatsPeriod
 
 
 @dataclass
@@ -33,6 +33,10 @@ class DiaryRepository(ABC):
         pass
 
     @abstractmethod
+    async def update(self, diary: UpdateDiaryDTO) -> Diary:
+        pass
+
+    @abstractmethod
     async def get_stats_by_user(
         self,
         user_id: int,
@@ -42,4 +46,12 @@ class DiaryRepository(ABC):
         Get mood statistics for a user over a period.
         Returns aggregate data calculated in DB.
         """
+        pass
+
+    @abstractmethod
+    async def get_by_id(self, diary_id: int) -> Optional[Diary]:
+        pass
+
+    @abstractmethod
+    async def get_by_user_and_date(self, user_id: int, date: date) -> Optional[Diary]:
         pass
