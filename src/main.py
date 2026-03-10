@@ -37,12 +37,14 @@ class App:
 
     async def _on_startup(self):
         self._container.infrastructure.container.session_manager()
+        await self._container.infrastructure.container.redis_cache().get_connection()
         me = await self._bot.get_me()
         logger.info(f"🤖 Bot started: @{me.username}")
 
     async def _on_shutdown(self):
         logger.info("🛑 Bot stopped")
         await self._container.infrastructure.container.session_manager().close()
+        await self._container.infrastructure.container.redis_cache().close()
         await self._bot.session.close()
 
     async def start(self):
