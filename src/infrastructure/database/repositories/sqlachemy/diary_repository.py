@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from domain.dtos import UpdateDiaryDTO
+from domain.dtos import SaveDiaryDTO, UpdateDiaryDTO
 from domain.entities import Diary, StatsPeriod
 from domain.exceptions import DuplicateDiaryError
 from domain.exceptions.exceptions import DiaryNotFoundError
@@ -19,7 +19,7 @@ class SQLAchemyDiaryRepository(DiaryRepository):
     def __init__(self, session_manager: DatabaseSessionManager):
         self.async_session_maker = session_manager
 
-    async def save(self, diary: Diary) -> Diary | None:
+    async def save(self, diary: SaveDiaryDTO) -> Diary | None:
         async with self.async_session_maker.get_session() as session:
             diaryModel = DiaryModel(
                 user_id=diary.user_id, rating=diary.rating, date=diary.date
@@ -30,7 +30,19 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                 return self._model_to_entity(diaryModel)
             except IntegrityError as e:
                 if is_duplication_error(e):
-                    raise DuplicateDiaryError(user_id=diary.user_id, date=diary.date)
+                    existing = await self.get_by_user_and_date(
+                        diary.user_id, diary.date
+                    )
+
+                    if existing is None:
+                        raise DiaryNotFoundError()
+
+                    raise DuplicateDiaryError(
+                        diary_id=existing.id,
+                        user_id=diary.user_id,
+                        date=diary.date,
+                        rating=diary.rating,
+                    )
                 raise
             except Exception:
                 raise

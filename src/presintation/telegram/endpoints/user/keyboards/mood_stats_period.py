@@ -1,6 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from application.dtos import StatsPeriod
+from domain.entities import StatsPeriod
 
 
 def create_mood_stats_period_keyboard() -> InlineKeyboardBuilder:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
-from domain.entities import Diary
+from typing import Optional
+from domain.dtos import SaveDiaryDTO
 from domain.exceptions import DuplicateDiaryError
 from domain.repositories import DiaryRepository, UserRepository
 
@@ -13,9 +14,16 @@ class RecordMoodRequest:
 
 
 @dataclass
+class ExistDiary:
+    existing_diary_id: int
+    old_rating: int
+
+
+@dataclass
 class RecordMoodResponse:
     success: bool
-    is_existing: bool = False
+    exist_diary: Optional[ExistDiary] = None
+    needs_confirmation: bool = False
 
 
 class RecordMoodUseCase:
@@ -32,11 +40,17 @@ class RecordMoodUseCase:
 
         try:
             await self._diary_repo.save(
-                Diary(user_id=user.id, date=reg.date, rating=reg.rating)
+                SaveDiaryDTO(user_id=user.id, date=reg.date, rating=reg.rating)
             )
-            return RecordMoodResponse(success=True, is_existing=False)
+            return RecordMoodResponse(success=True, needs_confirmation=False)
 
-        except DuplicateDiaryError:
-            return RecordMoodResponse(success=False, is_existing=True)
+        except DuplicateDiaryError as e:
+            return RecordMoodResponse(
+                success=False,
+                exist_diary=ExistDiary(
+                    existing_diary_id=e.diary_id, old_rating=e.rating
+                ),
+                needs_confirmation=True,
+            )
         except:
             raise
