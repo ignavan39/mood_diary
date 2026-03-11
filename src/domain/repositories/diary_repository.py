@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 
-from domain.dtos import UpdateDiaryDTO
+from domain.dtos import SaveDiaryDTO, UpdateDiaryDTO
 from domain.entities import Diary, StatsPeriod
 
 
@@ -18,7 +18,7 @@ class DiaryFilter:
 
 class DiaryRepository(ABC):
     @abstractmethod
-    async def save(self, diary: Diary) -> Optional[Diary]:
+    async def save(self, diary: SaveDiaryDTO) -> Optional[Diary]:
         """Persist a diary and return it with generated ID"""
         pass
 

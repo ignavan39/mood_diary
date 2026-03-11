@@ -1,5 +1,6 @@
 from aiogram.types import Message
-from presintation.telegram.mood.keyboards.record_mood import create_record_mood_keyboard
+
+from presintation.telegram.endpoints.mood.keyboards import create_record_mood_keyboard
 
 
 class GetRecordMoodMenuController:

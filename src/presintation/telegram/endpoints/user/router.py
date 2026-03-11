@@ -6,8 +6,10 @@ from dependency_injector.wiring import Provide, inject
 
 from application.use_cases import RegisterUserUseCase
 from infrastructure.ioc.container.application import AppContainer
-from presintation.telegram.user.controllers import RegisterUserController
-from presintation.telegram.user.keyboards import create_mood_stats_period_keyboard
+from presintation.telegram.endpoints.user.controllers import RegisterUserController
+from presintation.telegram.endpoints.user.keyboards import (
+    create_mood_stats_period_keyboard,
+)
 
 
 router = Router()
