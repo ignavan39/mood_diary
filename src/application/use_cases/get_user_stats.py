@@ -29,12 +29,12 @@ class GetUserStatsUseCase:
         if user is None or user.id is None:
             return GetUsetStatsResponse(success=False)
 
-        stats = await self._diary_repo.get_stats_by_user(
+        stats_dict = await self._diary_repo.get_stats_by_user(
             user_id=user.id,
             period=request.period,
         )
 
-        if not stats or stats.get("total_entries", 0) == 0:
+        if not stats_dict or stats_dict.get("total_entries", 0) == 0:
             return GetUsetStatsResponse(
                 stats=MoodStatsDTO(
                     total_entries=0,
@@ -48,13 +48,13 @@ class GetUserStatsUseCase:
 
         return GetUsetStatsResponse(
             stats=MoodStatsDTO(
-                total_entries=stats.get("total_entries", 0),
-                avg_mood=round(stats.get("avg_mood", 0.0), 1),
-                min_mood=stats.get("min_mood", 0),
-                max_mood=stats.get("max_mood", 0),
+                total_entries=stats_dict.get("total_entries", 0),
+                avg_mood=round(stats_dict.get("avg_mood", 0.0), 1),
+                min_mood=stats_dict.get("min_mood", 0),
+                max_mood=stats_dict.get("max_mood", 0),
                 period_days=request.period.value,
-                last_entry_date=stats.get("last_entry_date"),
-                first_entry_date=stats.get("first_entry_date"),
+                last_entry_date=stats_dict.get("last_entry_date"),
+                first_entry_date=stats_dict.get("first_entry_date"),
             ),
             success=True,
         )

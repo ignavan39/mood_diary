@@ -18,12 +18,10 @@ class ServicesContainer(containers.DeclarativeContainer):
         RegisterUserUseCase, user_repo=infrastructure.user_repository.provided
     )
 
-    get_user_weekly_stats_use_case: providers.Factory[GetUserStatsUseCase] = (
-        providers.Factory(
-            GetUserStatsUseCase,
-            diary_repo=infrastructure.diary_repository.provided,
-            user_repo=infrastructure.user_repository.provided,
-        )
+    get_user_stats_use_case: providers.Factory[GetUserStatsUseCase] = providers.Factory(
+        GetUserStatsUseCase,
+        diary_repo=infrastructure.diary_repository.provided,
+        user_repo=infrastructure.user_repository.provided,
     )
 
     record_mood_use_case: providers.Factory[RecordMoodUseCase] = providers.Factory(
