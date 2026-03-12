@@ -149,6 +149,7 @@ mood-diary-bot/
 ├── src/
 │   ├── main.py                   # Точка входа
 │   ├── domain/                   # Domain слой
+|   |   ├── dtos/                 # DTO для запросов/ответов
 │   │   ├── entities/             # Бизнес-сущности
 │   │   ├── repositories/         # Интерфейсы репозиториев
 │   │   └── exceptions/           # Domain исключения
@@ -160,13 +161,18 @@ mood-diary-bot/
 │   │   ├── ioc/                  # DI контейнер
 │   │   └── configs/              # Настройки
 │   └── presintation/             # Presentation слой
-│       └── telegram/             # aiogram хендлеры
-│           └── user/
-│               ├── router.py     # Роутеры и хендлеры
-│               └──  controllers/  # Контроллеры
+│       └── telegram/
+|           ├── utils/             # Утилиты
+│           └── endpoints
+|               ├── mood/           # Mood контроллеры
+|               │   ├── controllers/
+|               │   └── router.py
+|               └── user/           # User контроллеры
+|                   ├── controllers/
+|                   └── router.py  
 ├──monitoring/
 |   └── grafana/
-        ├──prometheus.yml     # Конфиг сбора метрик
+|       ├──prometheus.yml     # Конфиг сбора метрик
 │       └── provisioning/
 │           ├── dashboards/
 │           │   ├── dashboards.yml      # Конфиг авто-загрузки дашбордов
