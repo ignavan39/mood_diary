@@ -11,7 +11,7 @@ RUN uv sync --frozen --no-dev --no-install-project --no-editable
 COPY ./src ./src
 COPY alembic.ini ./
 
-RUN uv sync --frozen --no-dev --only-project
+RUN uv sync --frozen --no-dev --no-install-project
 
 FROM python:3.12-slim-trixie AS runtime
 
