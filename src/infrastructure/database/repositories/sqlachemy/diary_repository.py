@@ -101,14 +101,12 @@ class SQLAchemyDiaryRepository(DiaryRepository):
             if start_date:
                 stmt = stmt.where(DiaryModel.date >= start_date)
 
-            stmt = stmt.where(DiaryModel.created_at <= end_date)
+            stmt = stmt.where(DiaryModel.date <= end_date)
 
             result = await session.execute(stmt)
             row = result.first()
-
             if not row or row.total_entries == 0:
                 return None
-
             return {
                 "total_entries": row.total_entries,
                 "avg_mood": float(row.avg_mood) if row.avg_mood else 0.0,
