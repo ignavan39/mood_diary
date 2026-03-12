@@ -7,9 +7,7 @@ from dependency_injector.wiring import Provide, inject
 from application.use_cases import RegisterUserUseCase
 from infrastructure.ioc.container.application import AppContainer
 from presintation.telegram.endpoints.user.controllers import RegisterUserController
-from presintation.telegram.endpoints.user.keyboards import (
-    create_mood_stats_period_keyboard,
-)
+from presintation.telegram.endpoints.user.controllers.profile import ProfileController
 
 
 router = Router()
@@ -24,18 +22,11 @@ async def registration(
     ],
 ) -> None:
     use_case = use_case_factory.provider()
-    controller = RegisterUserController(use_case)
-    await controller.call(message)
+    await RegisterUserController(use_case).call(message)
 
 
 @router.message(Command("profile"))
 async def cmd_profile(
     message: Message,
 ) -> None:
-    if message.from_user is None:
-        return
-
-    await message.answer(
-        "📊 Выберите период для статистики \n\nЗа какой период показать данные?",
-        reply_markup=create_mood_stats_period_keyboard().as_markup(),
-    )
+    await ProfileController().call(message)

@@ -1,3 +1,13 @@
-from .exceptions import DuplicateUserError, DuplicateDiaryError
+from .exceptions import (
+    DuplicateUserError,
+    DuplicateDiaryError,
+    UserNotFoundError,
+    InvalidDiaryRatingError,
+)
 
-__all__ = ["DuplicateUserError", "DuplicateDiaryError"]
+__all__ = [
+    "DuplicateUserError",
+    "DuplicateDiaryError",
+    "InvalidDiaryRatingError",
+    "UserNotFoundError",
+]

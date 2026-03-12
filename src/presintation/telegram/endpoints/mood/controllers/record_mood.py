@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import logging
 
 from aiogram.types import CallbackQuery
 
@@ -6,10 +7,14 @@ from application.use_cases import RecordMoodUseCase
 from application.use_cases.record_mood import RecordMoodRequest
 from aiogram.fsm.context import FSMContext
 
+from domain.exceptions import InvalidDiaryRatingError
 from presintation.telegram.endpoints.mood.keyboards import (
     create_update_confirmation_keyboard,
 )
 from presintation.telegram.endpoints.mood.states import MoodFlow
+from presintation.telegram.utils import get_mood_emoji
+
+logger = logging.getLogger(__name__)
 
 
 class RecordMoodController:
@@ -20,7 +25,6 @@ class RecordMoodController:
         if query.from_user is None:
             return
         err_str = "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
-
         try:
             if query.data is None:
                 return
@@ -30,10 +34,6 @@ class RecordMoodController:
 
             mood_value = int(query.data.split("_")[1])
 
-            if mood_value < 0 or mood_value > 10:
-                await query.answer(err_str, show_alert=True)
-                return
-
             user_id = query.from_user.id
 
             request = RecordMoodRequest(
@@ -42,6 +42,7 @@ class RecordMoodController:
             response = await self._use_case.execute(request)
 
             today = date.today()
+            logger.info(response)
 
             if response.needs_confirmation is True and response.exist_diary is not None:
                 exist_diary = response.exist_diary
@@ -51,8 +52,8 @@ class RecordMoodController:
 
                 emoji = get_mood_emoji(mood_value)
                 await query.message.edit_text(  # type: ignore
-                    f"⚠️ <b>Запись за {today.strftime('%d.%m')} уже есть!</b>\n\n"
-                    f"Текущая: {response}/10\n"
+                    f"⚠️Запись за {today.strftime('%d.%m')} уже есть!\n\n"
+                    f"Текущая: {exist_diary.old_rating}/10\n"
                     f"Новая: {emoji} {mood_value}/10\n\n"
                     f"Хотите обновить?",
                     reply_markup=create_update_confirmation_keyboard(
@@ -60,30 +61,21 @@ class RecordMoodController:
                         new_rating=mood_value,
                     ).as_markup(),
                 )
-
-            emoji = get_mood_emoji(mood_value)
-            await query.message.edit_text(  # type: ignore
-                f"{emoji} Настроение сохранено!\n\n"
-                f"Твоя оценка: {mood_value}/10\n\n"
-                f"Используй /profile чтобы посмотреть статистику."
-            )
+            else:
+                await state.clear()
+                emoji = get_mood_emoji(mood_value)
+                await query.message.edit_text(  # type: ignore
+                    f"{emoji} Настроение сохранено!\n\n"
+                    f"Твоя оценка: {mood_value}/10\n\n"
+                    f"Используй /profile чтобы посмотреть статистику."
+                )
 
             await query.answer()
 
         except ValueError:
             await query.answer(err_str, show_alert=True)
-        except Exception:
+        except InvalidDiaryRatingError:
+            await query.answer(err_str, show_alert=True)
+        except Exception as e:
+            logger.exception("Error in mood selection %s", e)
             await query.answer("⚠️ Ошибка. Попробуйте позже.", show_alert=True)
-
-
-def get_mood_emoji(value: int) -> str:
-    if value <= 2:
-        return "😢"
-    elif value <= 4:
-        return "😟"
-    elif value <= 6:
-        return "😐"
-    elif value <= 8:
-        return "🙂"
-    else:
-        return "😄"

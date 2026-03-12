@@ -2,7 +2,11 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 from domain.dtos import SaveDiaryDTO
-from domain.exceptions import DuplicateDiaryError
+from domain.exceptions import (
+    DuplicateDiaryError,
+    InvalidDiaryRatingError,
+    UserNotFoundError,
+)
 from domain.repositories import DiaryRepository, UserRepository
 
 
@@ -31,16 +35,20 @@ class RecordMoodUseCase:
         self._diary_repo = diary_repo
         self._user_repo = user_repo
 
-    async def execute(self, reg: RecordMoodRequest):
+    async def execute(self, req: RecordMoodRequest):
         user = await self._user_repo.get_by_external_id(
-            external_id=reg.external_user_id
+            external_id=req.external_user_id
         )
         if user is None or user.id is None:
-            return RecordMoodResponse(success=False)
+            user_id = user.id if user is not None else None
+            raise UserNotFoundError(external_user_id=user_id)
+
+        if req.rating < 0 or req.rating > 10:
+            raise InvalidDiaryRatingError(rating=req.rating)
 
         try:
             await self._diary_repo.save(
-                SaveDiaryDTO(user_id=user.id, date=reg.date, rating=reg.rating)
+                SaveDiaryDTO(user_id=user.id, date=req.date, rating=req.rating)
             )
             return RecordMoodResponse(success=True, needs_confirmation=False)
 
