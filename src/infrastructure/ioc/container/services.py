@@ -5,6 +5,7 @@ from application.use_cases import (
     RecordMoodUseCase,
     RegisterUserUseCase,
 )
+from application.use_cases.update_mood import UpdateMoodUseCase
 from infrastructure.ioc.container.infrastructure import InfrastructureContainer
 
 
@@ -29,4 +30,8 @@ class ServicesContainer(containers.DeclarativeContainer):
         RecordMoodUseCase,
         diary_repo=infrastructure.diary_repository.provided,
         user_repo=infrastructure.user_repository.provided,
+    )
+
+    update_mood_use_case: providers.Factory[UpdateMoodUseCase] = providers.Factory(
+        UpdateMoodUseCase, diary_repo=infrastructure.diary_repository.provided
     )

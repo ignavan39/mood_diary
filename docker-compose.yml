@@ -125,7 +125,8 @@ services:
       dockerfile: Dockerfile.migrate
     env_file: .env
     depends_on:
-      - postgres
+       postgres:
+        condition: service_healthy
     stdin_open: true
     tty: true
     networks:
