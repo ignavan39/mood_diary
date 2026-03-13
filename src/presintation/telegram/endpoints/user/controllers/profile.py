@@ -83,9 +83,12 @@ class ProfileController:
             return
 
         emoji = Messages.get_mood_emoji(ceil(stats.avg_mood))
+        mood_text = Messages.format(Messages.get_mood_text(stats.avg_mood))
+
         text = Messages.format(
             Messages.STATS_DETAILS,
             emoji=emoji,
+            mood_text=mood_text,
             period=period.label,
             avg=stats.avg_mood,
             min=stats.min_mood,

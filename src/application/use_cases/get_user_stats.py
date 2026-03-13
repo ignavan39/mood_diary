@@ -58,13 +58,11 @@ class GetUserStatsUseCase:
                 last_entry_date = str(last_entry_date)[:10]
 
         first_entry_date = stats_dict.get("first_entry_date", "—")
-        if first_entry_date.first_entry_date:
-            if isinstance(first_entry_date.first_entry_date, date):
-                first_entry_date = first_entry_date.first_entry_date.strftime(
-                    "%d.%m.%Y"
-                )
+        if first_entry_date:
+            if isinstance(first_entry_date, date):
+                first_entry_date = first_entry_date.strftime("%d.%m.%Y")
             else:
-                first_entry_date = str(first_entry_date.first_entry_date)[:10]
+                first_entry_date = str(first_entry_date)[:10]
 
         return GetUsetStatsResponse(
             stats=MoodStatsDTO(

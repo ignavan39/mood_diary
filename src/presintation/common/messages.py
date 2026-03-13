@@ -68,7 +68,7 @@ class Messages:
 
     STATS_DETAILS = (
         "📊 Статистика\n\n"
-        "{emoji} Среднее настроение: {avg}/10 ({text})\n\n"
+        "{emoji} Среднее настроение: {avg}/10 ({mood_text})\n\n"
         "📈 Детали:\n"
         "• Записей: {total}\n"
         "• Минимум: {min}/10\n"
