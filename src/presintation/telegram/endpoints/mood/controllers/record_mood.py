@@ -13,7 +13,6 @@ from presintation.telegram.endpoints.mood.keyboards import (
     create_update_confirmation_keyboard,
 )
 from presintation.telegram.endpoints.mood.states import MoodFlow
-from presintation.telegram.utils import get_mood_emoji
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class RecordMoodController:
                 return
 
             mood_value = int(query.data.split("_")[1])
-            emoji = get_mood_emoji(mood_value)
+            emoji = Messages.get_mood_emoji(mood_value)
 
             user_id = query.from_user.id
 

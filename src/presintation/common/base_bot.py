@@ -4,8 +4,12 @@ from infrastructure import AppContainer
 
 
 class BaseBot(ABC):
-    def __init__(self, container: "AppContainer"):
+    def __init__(self, container: "AppContainer") -> None:
         self._container = container
+
+    @abstractmethod
+    async def create(self, container: "AppContainer"):
+        pass
 
     @abstractmethod
     async def start(self) -> None:
@@ -16,5 +20,6 @@ class BaseBot(ABC):
         pass
 
     @staticmethod
+    @abstractmethod
     def get_platform_name() -> str:
-        return "Unknown"
+        pass
