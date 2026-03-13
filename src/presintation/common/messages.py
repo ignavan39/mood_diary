@@ -82,6 +82,7 @@ class Messages:
     BTN_STATS = "📊 Моя статистика"
     BTN_HELP = "📖 Помощь"
     BTN_PROFILE = "👤 Профиль"
+    BTN_MAIN_MENU = "🏠 Главное меню"
     BTN_YES = "✅ Да, обновить"
     BTN_NO = "❌ Нет, отмена"
     BTN_CANCEL = "❌ Отмена"

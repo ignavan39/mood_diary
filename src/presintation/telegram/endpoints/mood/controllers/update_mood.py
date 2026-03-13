@@ -6,7 +6,6 @@ from aiogram.types import CallbackQuery
 from application.use_cases.update_mood import UpdateMoodRequest, UpdateMoodUseCase
 from presintation.common import Messages
 from presintation.telegram.endpoints.mood.router import FSMContext
-from presintation.telegram.utils import get_mood_emoji
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class UpdateMoodController:
 
             await state.clear()
 
-            emoji = get_mood_emoji(new_mood)
+            emoji = Messages.get_mood_emoji(new_mood)
             text = Messages.format(
                 Messages.MOOD_UPDATED,
                 old_rating=response.old_rating,

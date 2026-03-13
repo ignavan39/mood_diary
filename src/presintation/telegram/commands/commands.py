@@ -1,9 +1,11 @@
 from aiogram.types import BotCommand
 
+from presintation.common import Messages
+
 
 commands = [
-    BotCommand(command="start", description="🏠 Главное меню"),
-    BotCommand(command="mood", description="🎯 Оценить настроение"),
-    BotCommand(command="profile", description="📊 Статистика"),
-    BotCommand(command="help", description="📖 Помощь"),
+    BotCommand(command="start", description=Messages.BTN_MAIN_MENU),
+    BotCommand(command="mood", description=Messages.BTN_MOOD),
+    BotCommand(command="profile", description=Messages.BTN_PROFILE),
+    BotCommand(command="help", description=Messages.BTN_HELP),
 ]
