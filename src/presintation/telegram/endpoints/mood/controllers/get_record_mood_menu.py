@@ -1,5 +1,6 @@
 from aiogram.types import Message
 
+from presintation.common import Messages
 from presintation.telegram.endpoints.mood.keyboards import create_record_mood_keyboard
 
 
@@ -10,9 +11,4 @@ class GetRecordMoodMenuController:
 
         builder = create_record_mood_keyboard()
 
-        await message.answer(
-            "Как твоё настроение?\n\n"
-            "Выберите значение от 0 до 10:\n"
-            "0 = Очень плохо, 10 = Отлично",
-            reply_markup=builder.as_markup(),
-        )
+        await message.answer(Messages.MOOD_QUESTION, reply_markup=builder.as_markup())

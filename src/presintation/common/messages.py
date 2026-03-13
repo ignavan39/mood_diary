@@ -7,12 +7,12 @@ class Messages:
     # Welcome / Start
     # ─────────────────────────────────────────────────────────────
     WELCOME_TEXT = (
-        "👋Привет, {name}!\n\n"
+        "👋Привет, {full_name}!\n\n"
         "Я помогу тебе отслеживать настроение.\n"
         "Используй /mood чтобы оценить своё состояние."
     )
     WELCOME_TEXT_FOR_REGISTERED_USER = (
-        "✅ С возвращением, {name}!\n\nИспользуй /mood чтобы отметить настроение"
+        "✅ С возвращением, {full_name}!\n\nИспользуй /mood чтобы отметить настроение"
     )
 
     HELP_TEXT = (
@@ -104,20 +104,29 @@ class Messages:
         "no_data": "Нет данных",
     }
 
-    ERROR_INVALID = "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
+    INVALID_PERIOD = "❌ Неверный период"
+
+    INVALID_DIARY_RATING = (
+        "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
+    )
     ERROR_GENERIC = "⚠️ Ошибка. Попробуйте позже."
 
     @classmethod
-    def format(cls, key: str, **kwargs) -> str:
-
-        text = getattr(cls, key, "")
+    def format(cls, text: str, **kwargs) -> str:
         if not text:
-            return f"[[MISSING:{key}]]"
+            return "[[MISSING_TEXT]]"
 
         try:
             return text.format(**kwargs)
         except KeyError as e:
-            return f"[[FORMAT_ERROR:{key}:{e}]]"
+            return f"[[FORMAT_ERROR: missing {e}]]"
+        except Exception:
+            return text
+
+    @classmethod
+    def format_by_key(cls, key: str, **kwargs) -> str:
+        text = getattr(cls, key, "")
+        return cls.format(text, **kwargs)
 
     @classmethod
     def get_period_label(cls, days: int) -> str:

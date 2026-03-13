@@ -4,6 +4,7 @@ import logging
 from aiogram.types import CallbackQuery
 
 from application.use_cases.update_mood import UpdateMoodRequest, UpdateMoodUseCase
+from presintation.common import Messages
 from presintation.telegram.endpoints.mood.router import FSMContext
 from presintation.telegram.utils import get_mood_emoji
 
@@ -30,15 +31,17 @@ class UpdateMoodController:
             await state.clear()
 
             emoji = get_mood_emoji(new_mood)
+            text = Messages.format(
+                Messages.MOOD_UPDATED,
+                old_rating=response.old_rating,
+                new_rating=response.new_rating,
+                emoji=emoji,
+            )
             await query.message.edit_text(  # type: ignore
-                f"{emoji} Настроение обновлено!\n\n"
-                f"Было: {response.old_rating}/10\n"
-                f"Стало: {response.new_rating}/10"
+                text
             )
             await query.answer()
 
-        except (IndexError, ValueError):
-            await query.answer("❌ Ошибка обработки", show_alert=True)
         except Exception as e:
             logger.exception("Error in update: %s", e)
-            await query.answer("⚠️ Ошибка", show_alert=True)
+            await query.answer(Messages.ERROR_GENERIC, show_alert=True)

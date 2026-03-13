@@ -4,6 +4,7 @@ from aiogram.types import Message
 
 from application.use_cases import RegisterUserRequest, RegisterUserUseCase
 from infrastructure.metrics import messages_total
+from presintation.common import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +32,15 @@ class RegisterUserController:
 
             if response.is_existing:
                 await message.answer(
-                    f"✅ С возвращением, {full_name}!\n\n"
-                    f"Используй /mood чтобы отметить настроение."
+                    Messages.format(
+                        Messages.WELCOME_TEXT_FOR_REGISTERED_USER, full_name=full_name
+                    )
                 )
             else:
                 await message.answer(
-                    f"👋Привет, {full_name}!\n\n"
-                    f"Я помогу тебе отслеживать настроение.\n"
-                    f"Используй /mood чтобы оценить своё состояние."
+                    Messages.format(Messages.WELCOME_TEXT, full_name=full_name)
                 )
         except Exception as e:
             logger.error("Error in /start: %s", e)
             messages_total.labels(command="start", status="error").inc()
-            await message.answer("⚠️ Произошла ошибка. Попробуйте позже.")
+            await message.answer(Messages.ERROR_GENERIC)

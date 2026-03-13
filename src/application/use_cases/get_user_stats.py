@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from typing import Optional
 from application.dtos import MoodStatsDTO
 from domain.entities import StatsPeriod
@@ -48,6 +49,22 @@ class GetUserStatsUseCase:
                 ),
                 success=True,
             )
+        last_entry_date = stats_dict.get("last_entry_date", "—")
+
+        if last_entry_date:
+            if isinstance(last_entry_date, date):
+                last_entry_date = last_entry_date.strftime("%d.%m.%Y")
+            else:
+                last_entry_date = str(last_entry_date)[:10]
+
+        first_entry_date = stats_dict.get("first_entry_date", "—")
+        if first_entry_date.first_entry_date:
+            if isinstance(first_entry_date.first_entry_date, date):
+                first_entry_date = first_entry_date.first_entry_date.strftime(
+                    "%d.%m.%Y"
+                )
+            else:
+                first_entry_date = str(first_entry_date.first_entry_date)[:10]
 
         return GetUsetStatsResponse(
             stats=MoodStatsDTO(
@@ -56,8 +73,8 @@ class GetUserStatsUseCase:
                 min_mood=stats_dict.get("min_mood", 0),
                 max_mood=stats_dict.get("max_mood", 0),
                 period_days=request.period.value,
-                last_entry_date=stats_dict.get("last_entry_date"),
-                first_entry_date=stats_dict.get("first_entry_date"),
+                last_entry_date=last_entry_date,
+                first_entry_date=first_entry_date,
             ),
             success=True,
         )

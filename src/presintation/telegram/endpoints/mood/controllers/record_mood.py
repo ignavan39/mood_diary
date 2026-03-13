@@ -8,6 +8,7 @@ from application.use_cases.record_mood import RecordMoodRequest
 from aiogram.fsm.context import FSMContext
 
 from domain.exceptions import InvalidDiaryRatingError
+from presintation.common import Messages
 from presintation.telegram.endpoints.mood.keyboards import (
     create_update_confirmation_keyboard,
 )
@@ -24,7 +25,6 @@ class RecordMoodController:
     async def call(self, query: CallbackQuery, state: FSMContext):
         if query.from_user is None:
             return
-        err_str = "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
         try:
             if query.data is None:
                 return
@@ -33,6 +33,7 @@ class RecordMoodController:
                 return
 
             mood_value = int(query.data.split("_")[1])
+            emoji = get_mood_emoji(mood_value)
 
             user_id = query.from_user.id
 
@@ -53,12 +54,16 @@ class RecordMoodController:
                 await state.update_data(existing_diary_id=exist_diary.existing_diary_id)
                 await state.set_state(MoodFlow.confirming_update)
 
-                emoji = get_mood_emoji(mood_value)
+                text = Messages.format(
+                    Messages.MOOD_DUPLICATE,
+                    today=today.strftime("%d.%m"),
+                    old_rating=exist_diary.old_rating,
+                    new_rating=mood_value,
+                    emoji=emoji,
+                    mood_value=mood_value,
+                )
                 await query.message.edit_text(  # type: ignore
-                    f"⚠️Запись за {today.strftime('%d.%m')} уже есть!\n\n"
-                    f"Текущая: {exist_diary.old_rating}/10\n"
-                    f"Новая: {emoji} {mood_value}/10\n\n"
-                    f"Хотите обновить?",
+                    text,
                     reply_markup=create_update_confirmation_keyboard(
                         diary_id=exist_diary.existing_diary_id,
                         new_rating=mood_value,
@@ -66,19 +71,21 @@ class RecordMoodController:
                 )
             else:
                 await state.clear()
-                emoji = get_mood_emoji(mood_value)
+                text = Messages.format(
+                    Messages.MOOD_SAVED,
+                    mood_value=mood_value,
+                    emoji=emoji,
+                )
                 await query.message.edit_text(  # type: ignore
-                    f"{emoji} Настроение сохранено!\n\n"
-                    f"Твоя оценка: {mood_value}/10\n\n"
-                    f"Используй /profile чтобы посмотреть статистику."
+                    text
                 )
 
             await query.answer()
 
         except ValueError:
-            await query.answer(err_str, show_alert=True)
+            await query.answer(Messages.INVALID_DIARY_RATING, show_alert=True)
         except InvalidDiaryRatingError:
-            await query.answer(err_str, show_alert=True)
+            await query.answer(Messages.INVALID_DIARY_RATING, show_alert=True)
         except Exception as e:
             logger.exception("Error in mood selection %s", e)
-            await query.answer("⚠️ Ошибка. Попробуйте позже.", show_alert=True)
+            await query.answer(Messages.ERROR_GENERIC, show_alert=True)
