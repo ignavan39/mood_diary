@@ -26,7 +26,7 @@ class ProfileController:
 
         user_id = message.from_user.id
 
-        await self._send_stats_message(message, user_id, StatsPeriod.WEEK)
+        await self._send_stats_message(message, str(user_id), StatsPeriod.WEEK)
 
         await state.set_state(StatsFlow.viewing_stats)
 
@@ -46,7 +46,7 @@ class ProfileController:
             period = StatsPeriod(days)
             user_id = callback.from_user.id
 
-            await self._send_stats_message(callback.message, user_id, period)
+            await self._send_stats_message(callback.message, str(user_id), period)
             await callback.answer()
         except ValueError:
             await callback.answer("❌ Неверный период", show_alert=True)
@@ -56,11 +56,13 @@ class ProfileController:
     async def _send_stats_message(
         self,
         message: Message | InaccessibleMessage,
-        user_id: int,
+        user_id: str,
         period: StatsPeriod,
     ) -> None:
 
-        request = GetUserStatsRequest(external_user_id=user_id, period=period)
+        request = GetUserStatsRequest(
+            external_user_id=user_id, period=period, platform="telegram"
+        )
         response = await self.use_case.execute(request)
         stats = response.stats
 

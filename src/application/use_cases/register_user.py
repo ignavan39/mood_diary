@@ -1,15 +1,19 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from domain.dtos import SaveUserDTO
 from domain.entities import User
+from domain.entities.user import Platform
 from domain.exceptions import DuplicateUserError
 from domain.repositories.user_repository import UserRepository
 
 
 @dataclass
 class RegisterUserRequest:
-    external_id: int
-    name: Optional[str] = None
+    platform: Platform
+    external_user_id: str
+    full_name: Optional[str] = None
+    username: Optional[str] = None
 
 
 @dataclass
@@ -26,7 +30,12 @@ class RegisterUserUseCase:
     async def execute(self, reg: RegisterUserRequest):
         try:
             user = await self._user_repo.save(
-                User(external_id=reg.external_id, name=reg.name)
+                SaveUserDTO(
+                    external_id=reg.external_user_id,
+                    platform=reg.platform,
+                    full_name=reg.full_name,
+                    username=reg.username,
+                )
             )
             return GetUserResponse(success=True, is_existing=False, user=user)
         except DuplicateUserError:

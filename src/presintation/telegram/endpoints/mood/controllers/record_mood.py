@@ -37,7 +37,10 @@ class RecordMoodController:
             user_id = query.from_user.id
 
             request = RecordMoodRequest(
-                external_user_id=user_id, rating=mood_value, date=datetime.now().date()
+                external_user_id=str(user_id),
+                rating=mood_value,
+                date=datetime.now().date(),
+                platform="telegram",
             )
             response = await self._use_case.execute(request)
 

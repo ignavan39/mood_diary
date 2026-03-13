@@ -8,6 +8,8 @@ from aiogram.fsm.storage.redis import RedisStorage
 from infrastructure.configs import settings
 from infrastructure.ioc.container.application import AppContainer
 from infrastructure.metrics import start_metrics_server
+from presintation.telegram.commands import commands
+from presintation.telegram.endpoints.help import help_router
 from presintation.telegram.endpoints.mood import mood_router
 from presintation.telegram.endpoints.user import user_router
 
@@ -38,6 +40,8 @@ class App:
     async def _on_startup(self):
         self._container.infrastructure.session_manager()
         me = await self._bot.get_me()
+        await self._bot.set_my_commands(commands)
+
         logger.info(f"🤖 Bot started: @{me.username}")
 
     async def _on_shutdown(self):
@@ -65,6 +69,7 @@ class App:
 
         dp.include_router(user_router)
         dp.include_router(mood_router)
+        dp.include_router(help_router)
 
         threading.Thread(target=start_metrics_server, daemon=True).start()
 

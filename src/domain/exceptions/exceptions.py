@@ -7,17 +7,24 @@ class DomainException(Exception):
 
 
 class DuplicateUserError(DomainException):
-    def __init__(self, user_id: int, message: str = "User already exists"):
+    def __init__(
+        self, user_id: str, platform: str, message: str = "User already exists"
+    ):
         self.user_id = user_id
-        super().__init__(f"{message}: user_id={user_id}")
+        super().__init__(f"{message}: user_id={user_id} platform={platform}")
 
 
 class UserNotFoundError(DomainException):
     def __init__(
-        self, external_user_id: Optional[int] = None, message: str = "User not found"
+        self,
+        external_user_id: Optional[str] = None,
+        platform: Optional[str] = None,
+        message: str = "User not found",
     ):
         self.external_user_id = external_user_id
-        super().__init__(f"{message}: external_user_id={external_user_id}")
+        super().__init__(
+            f"{message}: external_user_id={external_user_id} platform={platform}"
+        )
 
 
 class DuplicateDiaryError(DomainException):

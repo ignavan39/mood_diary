@@ -2,12 +2,14 @@ from dataclasses import dataclass
 from typing import Optional
 from application.dtos import MoodStatsDTO
 from domain.entities import StatsPeriod
+from domain.entities.user import Platform
 from domain.repositories import DiaryRepository, UserRepository
 
 
 @dataclass
 class GetUserStatsRequest:
-    external_user_id: int
+    external_user_id: str
+    platform: Platform
     period: StatsPeriod = StatsPeriod.WEEK
 
 
@@ -24,7 +26,8 @@ class GetUserStatsUseCase:
 
     async def execute(self, request: GetUserStatsRequest) -> GetUsetStatsResponse:
         user = await self._user_repo.get_by_external_id(
-            external_id=request.external_user_id
+            external_id=request.external_user_id,
+            platfrom=request.platform,
         )
         if user is None or user.id is None:
             return GetUsetStatsResponse(success=False)
