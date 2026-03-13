@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import date
 from typing import Optional
 
 
@@ -10,8 +9,8 @@ class MoodStatsDTO:
     min_mood: int = 0
     max_mood: int = 0
     period_days: int = 7
-    last_entry_date: Optional[date] = None
-    first_entry_date: Optional[date] = None
+    last_entry_date: Optional[str] = None
+    first_entry_date: Optional[str] = None
 
     @property
     def mood_emoji(self) -> str:

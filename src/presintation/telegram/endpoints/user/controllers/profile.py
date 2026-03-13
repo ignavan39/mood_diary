@@ -1,10 +1,11 @@
-from datetime import date
+from math import ceil
 
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 from aiogram.fsm.context import FSMContext
 from application.use_cases import GetUserStatsUseCase
 from application.use_cases.get_user_stats import GetUserStatsRequest
 from domain.entities import StatsPeriod
+from presintation.common import Messages
 from presintation.telegram.endpoints.user.keyboards import (
     create_mood_stats_period_keyboard,
     create_mood_stats_with_refresh_keyboard,
@@ -49,9 +50,9 @@ class ProfileController:
             await self._send_stats_message(callback.message, str(user_id), period)
             await callback.answer()
         except ValueError:
-            await callback.answer("❌ Неверный период", show_alert=True)
+            await callback.answer(Messages.INVALID_PERIOD, show_alert=True)
         except Exception:
-            await callback.answer("⚠️ Ошибка. Попробуйте позже.", show_alert=True)
+            await callback.answer(Messages.ERROR_GENERIC, show_alert=True)
 
     async def _send_stats_message(
         self,
@@ -68,45 +69,30 @@ class ProfileController:
 
         if not response.success:
             await message.answer(
-                "⚠️ Ошибка при получении статистики. Попробуйте позже.",
+                Messages.ERROR_GENERIC,
                 reply_markup=create_mood_stats_period_keyboard().as_markup(),
             )
             return
 
         if stats is None or stats.total_entries == 0:
+            error_text = Messages.format(Messages.STATS_NO_DATA, period=period.label)
             await message.answer(
-                f"📊 Статистика: {period.label}\n\n"
-                f"❌ Нет записей за этот период.\n\n"
-                f"Используй /mood чтобы добавить первую запись!",
+                error_text,
                 reply_markup=create_mood_stats_period_keyboard().as_markup(),
             )
             return
 
-        last_entry = "—"
-        if stats.last_entry_date:
-            if isinstance(stats.last_entry_date, date):
-                last_entry = stats.last_entry_date.strftime("%d.%m.%Y")
-            else:
-                last_entry = str(stats.last_entry_date)[:10]
-
-        first_entry = "—"
-        if stats.first_entry_date:
-            if isinstance(stats.first_entry_date, date):
-                first_entry = stats.first_entry_date.strftime("%d.%m.%Y")
-            else:
-                first_entry = str(stats.first_entry_date)[:10]
-
-        text = (
-            f"📊 Статистика: {period.label}\n\n"
-            f"{stats.mood_emoji} Среднее настроение: {stats.avg_mood}/10 ({stats.mood_text})\n\n"
-            f"📈 Детали:\n"
-            f"• Записей: {stats.total_entries}\n"
-            f"• Минимум: {stats.min_mood}/10\n"
-            f"• Максимум: {stats.max_mood}/10\n\n"
-            f"🕐 Период:\n"
-            f"• Первая запись: {first_entry}\n"
-            f"• Последняя: {last_entry}\n\n"
-            f"Выберите другой период:"
+        emoji = Messages.get_mood_emoji(ceil(stats.avg_mood))
+        text = Messages.format(
+            Messages.STATS_DETAILS,
+            emoji=emoji,
+            period=period.label,
+            avg=stats.avg_mood,
+            min=stats.min_mood,
+            max=stats.max_mood,
+            total=stats.total_entries,
+            first=stats.first_entry_date,
+            last=stats.last_entry_date,
         )
 
         await message.answer(
