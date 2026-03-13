@@ -17,23 +17,26 @@ class RegisterUserController:
             return
         try:
             tg_id = message.from_user.id
-            name = message.from_user.full_name or "Пользователь"
+            full_name = message.from_user.full_name or "Пользователь"
+            username = message.from_user.username or "Пользователь"
 
             request = RegisterUserRequest(
-                external_id=tg_id,
-                name=name,
+                external_user_id=str(tg_id),
+                full_name=full_name,
+                platform="telegram",
+                username=username,
             )
             response = await self._use_case.execute(request)
             messages_total.labels(command="start", status="success").inc()
 
             if response.is_existing:
                 await message.answer(
-                    f"✅ С возвращением, {name}!\n\n"
+                    f"✅ С возвращением, {full_name}!\n\n"
                     f"Используй /mood чтобы отметить настроение."
                 )
             else:
                 await message.answer(
-                    f"👋Привет, {name}!\n\n"
+                    f"👋Привет, {full_name}!\n\n"
                     f"Я помогу тебе отслеживать настроение.\n"
                     f"Используй /mood чтобы оценить своё состояние."
                 )

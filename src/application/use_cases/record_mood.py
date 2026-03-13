@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 from domain.dtos import SaveDiaryDTO
+from domain.entities.user import Platform
 from domain.exceptions import (
     DuplicateDiaryError,
     InvalidDiaryRatingError,
@@ -12,7 +13,8 @@ from domain.repositories import DiaryRepository, UserRepository
 
 @dataclass
 class RecordMoodRequest:
-    external_user_id: int
+    platform: Platform
+    external_user_id: str
     rating: int
     date: date
 
@@ -37,9 +39,9 @@ class RecordMoodUseCase:
 
     async def execute(self, req: RecordMoodRequest):
         user = await self._user_repo.get_by_external_id(
-            external_id=req.external_user_id
+            external_id=req.external_user_id, platfrom=req.platform
         )
-        if user is None or user.id is None:
+        if user is None:
             user_id = user.id if user is not None else None
             raise UserNotFoundError(external_user_id=user_id)
 
