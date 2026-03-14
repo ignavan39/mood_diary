@@ -3,7 +3,6 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from dependency_injector.providers import Factory
 from dependency_injector.wiring import Provide, inject
-from aiogram.fsm.context import FSMContext
 
 from application.use_cases import RecordMoodUseCase
 from application.use_cases.update_mood import UpdateMoodUseCase
@@ -13,7 +12,6 @@ from presintation.telegram.endpoints.mood.controllers import (
     RecordMoodController,
     UpdateMoodController,
 )
-from presintation.telegram.endpoints.mood.states import MoodFlow
 
 
 router = Router()
@@ -30,23 +28,21 @@ async def get_menu(
 @router.callback_query(F.data.startswith("mood_"))
 async def record_mood(
     callback: CallbackQuery,
-    state: FSMContext,
     use_case_factory: Factory[RecordMoodUseCase] = Provide[
         AppContainer.services.record_mood_use_case
     ],
 ) -> None:
     use_case: RecordMoodUseCase = use_case_factory.provider()
-    return await RecordMoodController(use_case).call(callback, state)
+    return await RecordMoodController(use_case).call(callback)
 
 
-@router.callback_query(F.data.startswith("update_yes_"), MoodFlow.confirming_update)
+@router.callback_query(F.data.startswith("update_yes_"))
 @inject
 async def handle_update_confirmed(
     callback: CallbackQuery,
-    state: FSMContext,
     use_case_factory: Factory[UpdateMoodUseCase] = Provide[
         AppContainer.services.update_mood_use_case
     ],
 ) -> None:
     use_case: UpdateMoodUseCase = use_case_factory.provider()
-    return await UpdateMoodController(use_case).call(callback, state)
+    return await UpdateMoodController(use_case).call(callback)

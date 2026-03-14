@@ -5,14 +5,12 @@ from aiogram.types import CallbackQuery
 
 from application.use_cases import RecordMoodUseCase
 from application.use_cases.record_mood import RecordMoodRequest
-from aiogram.fsm.context import FSMContext
 
 from domain.exceptions import InvalidDiaryRatingError
 from presintation.common import Messages
 from presintation.telegram.endpoints.mood.keyboards import (
     create_update_confirmation_keyboard,
 )
-from presintation.telegram.endpoints.mood.states import MoodFlow
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +19,7 @@ class RecordMoodController:
     def __init__(self, use_case: RecordMoodUseCase) -> None:
         self._use_case = use_case
 
-    async def call(self, query: CallbackQuery, state: FSMContext):
+    async def call(self, query: CallbackQuery):
         if query.from_user is None:
             return
         try:
@@ -50,9 +48,6 @@ class RecordMoodController:
             if response.needs_confirmation is True and response.exist_diary is not None:
                 exist_diary = response.exist_diary
 
-                await state.update_data(existing_diary_id=exist_diary.existing_diary_id)
-                await state.set_state(MoodFlow.confirming_update)
-
                 text = Messages.format(
                     Messages.MOOD_DUPLICATE,
                     today=today.strftime("%d.%m"),
@@ -69,7 +64,6 @@ class RecordMoodController:
                     ).as_markup(),
                 )
             else:
-                await state.clear()
                 text = Messages.format(
                     Messages.MOOD_SAVED,
                     mood_value=mood_value,

@@ -1,7 +1,6 @@
 from math import ceil
 
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
-from aiogram.fsm.context import FSMContext
 from application.use_cases import GetUserStatsUseCase
 from application.use_cases.get_user_stats import GetUserStatsRequest
 from domain.entities import StatsPeriod
@@ -10,7 +9,6 @@ from presintation.telegram.endpoints.user.keyboards import (
     create_mood_stats_period_keyboard,
     create_mood_stats_with_refresh_keyboard,
 )
-from presintation.telegram.endpoints.user.states import StatsFlow
 
 
 class ProfileController:
@@ -20,7 +18,6 @@ class ProfileController:
     async def call(
         self,
         message: Message,
-        state: FSMContext,
     ) -> None:
         if message.from_user is None:
             return
@@ -28,8 +25,6 @@ class ProfileController:
         user_id = message.from_user.id
 
         await self._send_stats_message(message, str(user_id), StatsPeriod.WEEK)
-
-        await state.set_state(StatsFlow.viewing_stats)
 
     async def handle_stats_period(
         self,
