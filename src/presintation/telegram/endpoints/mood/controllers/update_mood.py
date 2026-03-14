@@ -5,7 +5,6 @@ from aiogram.types import CallbackQuery
 
 from application.use_cases.update_mood import UpdateMoodRequest, UpdateMoodUseCase
 from presintation.common import Messages
-from presintation.telegram.endpoints.mood.router import FSMContext
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ class UpdateMoodController:
     def __init__(self, use_case: UpdateMoodUseCase) -> None:
         self._use_case = use_case
 
-    async def call(self, query: CallbackQuery, state: FSMContext):
+    async def call(self, query: CallbackQuery):
         if query.from_user is None or query.data is None:
             return
         try:
@@ -27,7 +26,6 @@ class UpdateMoodController:
             )
             response = await self._use_case.execute(request)
 
-            await state.clear()
 
             emoji = Messages.get_mood_emoji(new_mood)
             text = Messages.format(
