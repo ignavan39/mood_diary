@@ -26,14 +26,18 @@ class UpdateMoodController:
             )
             response = await self._use_case.execute(request)
 
-
             emoji = Messages.get_mood_emoji(new_mood)
-            text = Messages.format(
-                Messages.MOOD_UPDATED,
-                old_rating=response.old_rating,
-                new_rating=response.new_rating,
-                emoji=emoji,
-            )
+            if response.old_rating == new_mood:
+                text = Messages.format(
+                    Messages.MOOD_UPDATE_EQUAL, rating=new_mood, emoji=emoji
+                )
+            else:
+                text = Messages.format(
+                    Messages.MOOD_UPDATED,
+                    old_rating=response.old_rating,
+                    new_rating=response.new_rating,
+                    emoji=emoji,
+                )
             await query.message.edit_text(  # type: ignore
                 text
             )

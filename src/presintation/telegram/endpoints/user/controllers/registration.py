@@ -3,7 +3,6 @@ import logging
 from aiogram.types import Message
 
 from application.use_cases import RegisterUserRequest, RegisterUserUseCase
-from infrastructure.metrics import messages_total
 from presintation.common import Messages
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ class RegisterUserController:
                 username=username,
             )
             response = await self._use_case.execute(request)
-            messages_total.labels(command="start", status="success").inc()
 
             if response.is_existing:
                 await message.answer(
@@ -42,5 +40,4 @@ class RegisterUserController:
                 )
         except Exception as e:
             logger.error("Error in /start: %s", e)
-            messages_total.labels(command="start", status="error").inc()
             await message.answer(Messages.ERROR_GENERIC)

@@ -49,6 +49,8 @@ class Messages:
         "{emoji} Настроение обновлено!\n\nБыло: {old_rating}/10\nСтало: {new_rating}/10"
     )
 
+    MOOD_UPDATE_EQUAL = "{emoji} Настроение не изменилось!\n\nОценка: {rating}/10"
+
     MOOD_DUPLICATE = (
         "⚠️Запись за {today} уже есть!\n\n"
         "Текущая: {old_rating}/10\n"

@@ -8,5 +8,9 @@ from infrastructure.ioc.container.services import (
 
 
 class AppContainer(containers.DeclarativeContainer):
-    infrastructure = providers.Container(InfrastructureContainer)
-    services = providers.Container(ServicesContainer)
+    infrastructure: providers.Container[InfrastructureContainer] = providers.Container(
+        InfrastructureContainer
+    )
+    services: providers.Container[ServicesContainer] = providers.Container(
+        ServicesContainer
+    )

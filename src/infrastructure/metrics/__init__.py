@@ -1,3 +1,4 @@
-from .prometheus import start_metrics_server, messages_total
+from .metrics import start_metrics_server_thread
+from .health import start_health_server, start_health_server_thread
 
-__all__ = ["start_metrics_server", "messages_total"]
+__all__ = ["start_metrics_server_thread", "start_health_server", "start_health_server_thread"]

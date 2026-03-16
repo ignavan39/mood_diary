@@ -17,16 +17,12 @@ logger = logging.getLogger(__name__)
 class TelegramBot(BaseBot):
     def __init__(self, container: "AppContainer") -> None:
         super().__init__(container)
-
-    async def create(self, container: "AppContainer"):
         self._bot = Bot(
             token=settings.tg_bot.token, default=DefaultBotProperties(parse_mode="HTML")
         )
         self._dp = Dispatcher()
 
         self._dp.include_routers(user_router, mood_router, help_router)
-
-        logger.info("✅ Telegram Bot initialized")
 
     async def start(self) -> None:
         logger.info("🚀 Starting Telegram Bot (polling)...")
