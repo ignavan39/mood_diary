@@ -8,10 +8,6 @@ class BaseBot(ABC):
         self._container = container
 
     @abstractmethod
-    async def create(self, container: "AppContainer"):
-        pass
-
-    @abstractmethod
     async def start(self) -> None:
         pass
 

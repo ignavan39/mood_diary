@@ -1,17 +1,20 @@
+# src/main.py
 import asyncio
 import logging
 import sys
-import threading
-from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.redis import RedisStorage
+from typing import List
 
+from infrastructure import AppContainer
 from infrastructure.configs import settings
-from infrastructure.ioc.container.application import AppContainer
-from infrastructure.metrics import start_metrics_server
-from presintation.telegram.commands import commands
-from presintation.telegram.endpoints.help import help_router
-from presintation.telegram.endpoints.mood import mood_router
-from presintation.telegram.endpoints.user import user_router
+from infrastructure.lifecycle import signal_handler
+from infrastructure.metrics import (
+    start_health_server_thread,
+    start_metrics_server_thread,
+)
+from presintation.common import BotRunner
+from presintation.common.base_bot import BaseBot
+from presintation.telegram.bot import create_telegram_bot
+
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
@@ -20,64 +23,83 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
-
 logger = logging.getLogger(__name__)
-logger.info("Logging system initialized")
+container = AppContainer()
 
 
-logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+async def on_startup() -> None:
+    await container.infrastructure.container.redis_cache().get_connection()
+    container.infrastructure.container.session_manager()
+    logger.info("✅ All bots started")
 
-logging.getLogger("aiogram").setLevel(logging.INFO)
-logging.getLogger("aiogram.events").setLevel(logging.INFO)
+
+async def on_shutdown() -> None:
+    logger.info("Cleaning up...")
+
+    await container.infrastructure.redis_cache().close()
+    await container.infrastructure.session_manager().close()
+
+    logger.info("Cleanup completed")
 
 
-class App:
-    def __init__(self):
-        self._bot = Bot(settings.tg_bot.token)
-        self._container = AppContainer()
+async def async_main() -> None:
+    logger.info("Initializing infrastructure...")
+    await on_startup()
 
-    async def _on_startup(self):
-        self._container.infrastructure.session_manager()
-        me = await self._bot.get_me()
-        await self._bot.set_my_commands(commands)
+    logger.info("Infrastructure initialized")
 
-        logger.info(f"🤖 Bot started: @{me.username}")
+    bots: List[BaseBot] = []
 
-    async def _on_shutdown(self):
-        logger.info("🛑 Bot stopped")
-        await self._container.infrastructure.session_manager().close()
-        await self._container.infrastructure.redis_cache().close()
-        await self._bot.session.close()
+    telegram_bot = create_telegram_bot(container)
+    bots.append(telegram_bot)
 
-    async def start(self):
-        redis_manager = self._container.infrastructure.redis_cache()
-        redis = await redis_manager.get_connection()
-        fsm_storage = RedisStorage(
-            redis=redis,
-            state_ttl=3600,
-            data_ttl=7200,
-        )
+    logger.info(
+        "Created %d bot(s): %s",
+        len(bots),
+        ", ".join(b.get_platform_name() for b in bots),
+    )
 
-        dp = Dispatcher(storage=fsm_storage)
+    start_health_server_thread(port=8080)
+    start_metrics_server_thread(port=8000)
 
-        logger.info("FSM storage initialized (Redis-backend)")
+    logger.info("Health: http://localhost:8080/health")
+    logger.info("Metrics: http://localhost:8000/metrics")
+    runner = BotRunner(bots)
 
-        logger.info("Starting mood_diary bot...")
-        dp.startup.register(self._on_startup)
-        dp.shutdown.register(self._on_shutdown)
-
-        dp.include_router(user_router)
-        dp.include_router(mood_router)
-        dp.include_router(help_router)
-
-        threading.Thread(target=start_metrics_server, daemon=True).start()
-
-        bot = self._bot
-        await dp.start_polling(bot)
-        logger.info("📡 Polling stopped")
+    start_task = asyncio.create_task(runner.start_all())
+    
+    try:
+        shutdown_received = await signal_handler.wait_for_shutdown()
+        if shutdown_received:
+            logger.info("👋 Shutdown signal received")
+            await runner.stop_all()
+        
+        if not start_task.done():
+            await start_task
+            
+    except asyncio.CancelledError:
+        logger.info("Task cancelled")
+        await runner.stop_all()
+    except KeyboardInterrupt:
+        logger.info("KeyboardInterrupt")
+        await signal_handler.shutdown("KeyboardInterrupt")
+        await runner.stop_all()
+    except Exception as e:
+        logger.exception("💥 Fatal error: %s", e)
+        await signal_handler.shutdown(f"Error: {e}")
+        await runner.stop_all()
+        sys.exit(1)
+    finally:
+        if not signal_handler.is_shutting_down:
+            await signal_handler.shutdown("Final cleanup")
 
 
 if __name__ == "__main__":
-    app = App()
-    asyncio.run(app.start())
+    try:
+        logger.info("✅ Mood Diary Bot starting...")
+        asyncio.run(async_main())
+    except KeyboardInterrupt:
+        logger.info("👋 Goodbye!")
+    except Exception as e:
+        logger.exception("💥 Fatal error %s", e)
+        sys.exit(1)
