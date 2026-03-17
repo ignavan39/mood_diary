@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Messages:
-
     WELCOME_TEXT = (
         "👋Привет, {full_name}!\n\n"
         "Я помогу тебе отслеживать настроение.\n"
@@ -136,7 +135,10 @@ class Messages:
         "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
     )
     ERROR_GENERIC = "⚠️ Ошибка. Попробуйте позже."
-    ERROR_GENERATE_INFOGRAPHIC = "❌ Ошибка при генерации инфографики. Попробуйте позже."
+    ERROR_GENERATE_INFOGRAPHIC = (
+        "❌ Ошибка при генерации инфографики. Попробуйте позже."
+    )
+
     @classmethod
     def format(cls, text: str, **kwargs) -> str:
         if not text:

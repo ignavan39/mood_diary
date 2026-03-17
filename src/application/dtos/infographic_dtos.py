@@ -35,7 +35,6 @@ class GenerateInfographicRequest:
     platform: Platform = "telegram"
 
 
-
 @dataclass
 class GenerateInfographicResponse:
     image_data: BytesIO

@@ -142,9 +142,7 @@ class SQLAchemyDiaryRepository(DiaryRepository):
             model = result.scalar_one_or_none()
             return self._model_to_entity(model) if model else None
 
-    async def get_by_user_and_date(
-        self, user_id: int, date: date
-    ) -> Optional[Diary]:
+    async def get_by_user_and_date(self, user_id: int, date: date) -> Optional[Diary]:
         async with self.async_session_maker.get_session() as session:
             stmt = select(DiaryModel).where(
                 DiaryModel.user_id == user_id,
@@ -161,31 +159,31 @@ class SQLAchemyDiaryRepository(DiaryRepository):
             date=model.date,
             rating=model.rating,
         )
-    
+
     async def get_many_by_user_and_timerange(
         self,
         filters: DiaryFilter,
     ) -> List[Diary]:
         async with self.async_session_maker.get_session() as session:
             stmt = select(DiaryModel).where(DiaryModel.user_id == filters.user_id)
-            
+
             if filters.start_date:
                 stmt = stmt.where(DiaryModel.date >= filters.start_date)
-            
+
             if filters.end_date:
                 stmt = stmt.where(DiaryModel.date <= filters.end_date)
-            
+
             if filters.limit:
                 stmt = stmt.limit(filters.limit)
-            
+
             if filters.offset:
                 stmt = stmt.offset(filters.offset)
-                
+
             if filters.order_by == "date_desc":
                 stmt = stmt.order_by(DiaryModel.date.desc())
             else:
                 stmt = stmt.order_by(DiaryModel.date.asc())
-            
+
             result = await session.execute(stmt)
             models = result.scalars().all()
             return [self._model_to_entity(model) for model in models]

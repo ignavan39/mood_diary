@@ -6,6 +6,7 @@ from datetime import date
 
 from application.dtos import ChartTheme, ChartType
 
+
 class ChartData(TypedDict, total=True):
     dates: list[date]
     values: list[int]
@@ -13,7 +14,7 @@ class ChartData(TypedDict, total=True):
     period_days: int
 
 
-class ChartGeneratorInterface(ABC):  
+class ChartGeneratorInterface(ABC):
     @abstractmethod
     async def generate(
         self,
@@ -27,7 +28,7 @@ class ChartGeneratorInterface(ABC):
         dpi: int = 100,
     ) -> BytesIO:
         pass
-    
+
     @abstractmethod
     async def generate_empty(
         self,
@@ -38,7 +39,7 @@ class ChartGeneratorInterface(ABC):
         dpi: int = 100,
     ) -> BytesIO:
         pass
-    
+
     @abstractmethod
     async def shutdown(self) -> None:
         pass

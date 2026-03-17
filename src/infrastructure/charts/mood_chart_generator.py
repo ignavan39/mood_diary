@@ -8,7 +8,7 @@ from typing import Optional, TypedDict
 import matplotlib
 from infrastructure.concurrency import executor_pool
 
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
@@ -36,7 +36,7 @@ class ThemeColors(TypedDict):
 class MoodChartGenerator(ChartGeneratorInterface):
     def __init__(self) -> None:
         self._executor = executor_pool.get_executor("chart_generator", max_workers=4)
-    
+
     THEMES: dict[ChartTheme, ThemeColors] = {
         "light": {
             "bg": "#ffffff",
@@ -57,7 +57,7 @@ class MoodChartGenerator(ChartGeneratorInterface):
             "mood_colors": ["#f72585", "#f8961e", "#f9c74f", "#43aa8b", "#4d908e"],
         },
     }
-    
+
     async def generate(
         self,
         data: ChartData,
@@ -68,16 +68,22 @@ class MoodChartGenerator(ChartGeneratorInterface):
         width: int = 1200,
         height: int = 800,
         dpi: int = 100,
-    ) -> BytesIO:        
+    ) -> BytesIO:
         loop = asyncio.get_running_loop()
-        
+
         return await loop.run_in_executor(
             self._executor,
             self._generate_sync,
-            data, chart_type, theme, include_stats,
-            user_id, width, height, dpi,
+            data,
+            chart_type,
+            theme,
+            include_stats,
+            user_id,
+            width,
+            height,
+            dpi,
         )
-    
+
     def _generate_sync(
         self,
         data: ChartData,
@@ -90,33 +96,42 @@ class MoodChartGenerator(ChartGeneratorInterface):
         dpi: int,
     ) -> BytesIO:
         theme_colors: ThemeColors = self.THEMES[theme]
-        
-        fig, ax = plt.subplots(figsize=(width/dpi, height/dpi), dpi=dpi, facecolor=theme_colors["bg"])
+
+        fig, ax = plt.subplots(
+            figsize=(width / dpi, height / dpi), dpi=dpi, facecolor=theme_colors["bg"]
+        )
         ax.set_facecolor(theme_colors["bg"])
         ax.tick_params(colors=theme_colors["fg"])
         for spine in ax.spines.values():
             spine.set_color(theme_colors["grid"])
-        
+
         dates: list[date] = data["dates"]
         values: list[int] = data["values"]
         stats: dict = data["stats"]
         period_days: int = data["period_days"]
-        
+
         if chart_type == "line":
             self._draw_line_chart_sync(ax, dates, values, theme_colors)
         elif chart_type == "bar":
             self._draw_bar_chart_sync(ax, dates, values, theme_colors)
         elif chart_type == "calendar":
             self._draw_calendar_chart_sync(ax, dates, values, theme_colors)
-        
+
         period_label = self._get_period_label(period_days)
-        ax.set_title(f"Настроение: {period_label}", color=theme_colors["fg"], fontsize=16, fontweight="bold", pad=20)
-        
+        ax.set_title(
+            f"Настроение: {period_label}",
+            color=theme_colors["fg"],
+            fontsize=16,
+            fontweight="bold",
+            pad=20,
+        )
+
         if include_stats:
             self._draw_stats_box_sync(ax, stats, theme_colors)
-        
+
         ax.text(
-            0.5, 0.02,
+            0.5,
+            0.02,
             f"@mood_diary_bbot • {datetime.now().strftime('%d.%m.%Y')}",
             transform=ax.transAxes,
             ha="center",
@@ -124,7 +139,7 @@ class MoodChartGenerator(ChartGeneratorInterface):
             color=theme_colors["text"],
             alpha=0.6,
         )
-        
+
         buffer = BytesIO()
         plt.tight_layout()
         plt.savefig(
@@ -135,9 +150,9 @@ class MoodChartGenerator(ChartGeneratorInterface):
             bbox_inches="tight",
         )
         plt.close(fig)
-        
+
         return buffer
-    
+
     async def generate_empty(
         self,
         period_days: int,
@@ -150,9 +165,13 @@ class MoodChartGenerator(ChartGeneratorInterface):
         return await loop.run_in_executor(
             self._executor,
             self._generate_empty_sync,
-            period_days, theme, width, height, dpi,
+            period_days,
+            theme,
+            width,
+            height,
+            dpi,
         )
-    
+
     def _generate_empty_sync(
         self,
         period_days: int,
@@ -164,14 +183,15 @@ class MoodChartGenerator(ChartGeneratorInterface):
         colors: ThemeColors = self.THEMES[theme]
 
         fig, ax = plt.subplots(
-            figsize=(width/dpi, height/dpi),
+            figsize=(width / dpi, height / dpi),
             dpi=dpi,
             facecolor=colors["bg"],
         )
         ax.set_facecolor(colors["bg"])
 
         ax.text(
-            0.5, 0.6,
+            0.5,
+            0.6,
             "[!]",
             transform=ax.transAxes,
             ha="center",
@@ -181,7 +201,8 @@ class MoodChartGenerator(ChartGeneratorInterface):
         )
 
         ax.text(
-            0.5, 0.4,
+            0.5,
+            0.4,
             f"Нет данных за {period_days} дней",
             transform=ax.transAxes,
             ha="center",
@@ -190,7 +211,8 @@ class MoodChartGenerator(ChartGeneratorInterface):
             fontweight="bold",
         )
         ax.text(
-            0.5, 0.3,
+            0.5,
+            0.3,
             "Используй /mood чтобы начать",
             transform=ax.transAxes,
             ha="center",
@@ -213,18 +235,22 @@ class MoodChartGenerator(ChartGeneratorInterface):
             facecolor=colors["bg"],
             bbox_inches="tight",
         )
-        plt.close(fig)  
-        
+        plt.close(fig)
+
         return buffer
-    
+
     async def shutdown(self) -> None:
         self._executor.shutdown(wait=True)
         logger.info("Chart generator executor shutdown")
 
-    def _draw_line_chart_sync(self, ax, dates: list[date], values: list[int], colors: ThemeColors) -> None:
+    def _draw_line_chart_sync(
+        self, ax, dates: list[date], values: list[int], colors: ThemeColors
+    ) -> None:
         if not dates:
             return
-        ax.plot(dates, values, color=colors["line"], linewidth=2, marker="o", markersize=4)
+        ax.plot(
+            dates, values, color=colors["line"], linewidth=2, marker="o", markersize=4
+        )
         ax.fill_between(dates, values, 0, color=colors["fill"], alpha=0.3)
         ax.set_xlabel("Дата", color=colors["fg"])
         ax.set_ylabel("Настроение", color=colors["fg"])
@@ -232,8 +258,10 @@ class MoodChartGenerator(ChartGeneratorInterface):
         ax.set_yticks(range(0, 11, 2))
         ax.grid(True, linestyle="--", alpha=0.3, color=colors["grid"])
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
-    
-    def _draw_bar_chart_sync(self, ax, dates: list[date], values: list[int], colors: ThemeColors) -> None:
+
+    def _draw_bar_chart_sync(
+        self, ax, dates: list[date], values: list[int], colors: ThemeColors
+    ) -> None:
         if not dates:
             return
         x_pos = range(len(dates))
@@ -243,24 +271,35 @@ class MoodChartGenerator(ChartGeneratorInterface):
         ax.set_ylabel("Настроение", color=colors["fg"])
         ax.set_ylim(0, 11)
         ax.set_xticks(x_pos)
-        ax.set_xticklabels([d.strftime("%d.%m") for d in dates], rotation=45, ha="right")
-    
-    def _draw_calendar_chart_sync(self, ax, dates: list[date], values: list[int], colors: ThemeColors) -> None:
+        ax.set_xticklabels(
+            [d.strftime("%d.%m") for d in dates], rotation=45, ha="right"
+        )
+
+    def _draw_calendar_chart_sync(
+        self, ax, dates: list[date], values: list[int], colors: ThemeColors
+    ) -> None:
         if not dates:
             return
         from collections import defaultdict
+
         weeks = defaultdict(list)
         for d, v in zip(dates, values):
             weeks[d.isocalendar()[1]].append((d, v))
-        data_matrix = [[v for _, v in weeks.get(w, [(None, None)])[:7]] + [None] * (7 - len(weeks.get(w, []))) for w in sorted(weeks.keys())]
+        data_matrix = [
+            [v for _, v in weeks.get(w, [(None, None)])[:7]]
+            + [None] * (7 - len(weeks.get(w, [])))
+            for w in sorted(weeks.keys())
+        ]
         if data_matrix:
-            im = ax.imshow(data_matrix, cmap="RdYlGn", aspect="auto", vmin=0, vmax=10, alpha=0.8)
+            im = ax.imshow(
+                data_matrix, cmap="RdYlGn", aspect="auto", vmin=0, vmax=10, alpha=0.8
+            )
             ax.set_yticks(range(len(data_matrix)))
             ax.set_yticklabels([f"W{w}" for w in sorted(weeks.keys())])
             ax.set_xticks(range(7))
             ax.set_xticklabels(["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"])
             plt.colorbar(im, ax=ax, label="Настроение")
-    
+
     def _draw_stats_box_sync(self, ax, stats: dict, colors: ThemeColors) -> None:
         x_pos, y_pos, box_width, box_height = 0.72, 0.85, 0.25, 0.12
         rect = Rectangle(
@@ -274,14 +313,16 @@ class MoodChartGenerator(ChartGeneratorInterface):
             linewidth=1,
         )
         ax.add_patch(rect)
-        
+
         trend_indicator = {"improving": "+", "declining": "-", "stable": "="}.get(
             stats.get("trend", "stable"), "="
         )
-        trend_text = {"improving": "растёт", "declining": "падает", "stable": "стабильно"}.get(
-            stats.get("trend", "stable"), "стабильно"
-        )
-        
+        trend_text = {
+            "improving": "растёт",
+            "declining": "падает",
+            "stable": "стабильно",
+        }.get(stats.get("trend", "stable"), "стабильно")
+
         stats_text = (
             f"Статистика:\n"
             f"• Записей: {stats.get('total_entries', 0)}\n"
@@ -289,7 +330,7 @@ class MoodChartGenerator(ChartGeneratorInterface):
             f"• Диапазон: {stats.get('min_mood', 0)}-{stats.get('max_mood', 0)}\n"
             f"{trend_indicator} Тренд: {trend_text}"
         )
-        
+
         ax.text(
             x_pos + 0.02,
             y_pos - 0.02,
@@ -300,7 +341,7 @@ class MoodChartGenerator(ChartGeneratorInterface):
             va="top",
             family="monospace",
         )
-    
+
     @staticmethod
     def _get_period_label(days: int) -> str:
         return {

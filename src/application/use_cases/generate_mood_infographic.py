@@ -1,8 +1,7 @@
 # application/use_cases/generate_mood_infographic.py
 import logging
 from datetime import datetime, timedelta, date
-from typing import List, Optional
-from io import BytesIO
+from typing import List
 
 from application.dtos import Trend
 from domain.entities import Diary
@@ -46,10 +45,7 @@ class GenerateMoodInfographicUseCase:
             user_id = user.id if user is not None else None
             raise UserNotFoundError(external_user_id=user_id)
 
-
-        diaries = await self._get_diaries_for_period(
-            user.id, request.days
-        )
+        diaries = await self._get_diaries_for_period(user.id, request.days)
 
         if not diaries:
             image_buffer = await self._chart_generator.generate_empty(
