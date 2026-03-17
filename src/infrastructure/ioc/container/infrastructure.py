@@ -1,8 +1,10 @@
 from dependency_injector import containers, providers
 from dependency_injector.providers import Factory, Singleton
 
+from application.services.chart_generator import ChartGeneratorInterface
 from domain.repositories import DiaryRepository, UserRepository
 from infrastructure.cache.redis import RedisManager
+from infrastructure.charts.mood_chart_generator import MoodChartGenerator
 from infrastructure.configs.config import Settings
 from infrastructure.database import DatabaseSessionManager
 from infrastructure.database.repositories.sqlachemy import (
@@ -35,4 +37,8 @@ class InfrastructureContainer(containers.DeclarativeContainer):
 
     diary_repository: Factory[DiaryRepository] = providers.Factory(
         SQLAchemyDiaryRepository, session_manager=session_manager.provided
+    )
+    
+    chart_generator: Factory[ChartGeneratorInterface] = providers.Factory(
+        MoodChartGenerator,
     )

@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import List, Literal, Optional
 
 from domain.dtos import SaveDiaryDTO, UpdateDiaryDTO
 from domain.entities import Diary, StatsPeriod
 
+OrderBy = Literal["date_asc", "date_desc", "rating_asc", "rating_desc"]
 
 @dataclass
 class DiaryFilter:
@@ -14,6 +15,7 @@ class DiaryFilter:
     end_date: Optional[date] = None
     limit: Optional[int] = 100
     offset: Optional[int] = 0
+    order_by: OrderBy = "date_asc"
 
 
 class DiaryRepository(ABC):
@@ -26,10 +28,6 @@ class DiaryRepository(ABC):
     async def get_stats_by_user_and_timerange(
         self, filters: DiaryFilter
     ) -> Optional[dict]:
-        """
-        Get mood statistics for a user.
-        Returns aggregate data calculated in DB (faster than Python).
-        """
         pass
 
     @abstractmethod
@@ -54,4 +52,8 @@ class DiaryRepository(ABC):
 
     @abstractmethod
     async def get_by_user_and_date(self, user_id: int, date: date) -> Optional[Diary]:
+        pass
+
+    @abstractmethod
+    async def get_many_by_user_and_timerange(self, filters: DiaryFilter) -> List[Diary]:
         pass

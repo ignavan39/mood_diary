@@ -8,4 +8,5 @@ commands = [
     BotCommand(command="mood", description=Messages.BTN_MOOD),
     BotCommand(command="profile", description=Messages.BTN_PROFILE),
     BotCommand(command="help", description=Messages.BTN_HELP),
+    BotCommand(command="export", description=Messages.BTN_EXPORT_INFORGRAPHIC),
 ]
