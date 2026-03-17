@@ -26,6 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 container = AppContainer()
 
+
 async def on_startup() -> None:
     await container.infrastructure.container.redis_cache().get_connection()
     container.infrastructure.container.session_manager()

@@ -38,7 +38,7 @@ class InfrastructureContainer(containers.DeclarativeContainer):
     diary_repository: Factory[DiaryRepository] = providers.Factory(
         SQLAchemyDiaryRepository, session_manager=session_manager.provided
     )
-    
+
     chart_generator: Factory[ChartGeneratorInterface] = providers.Factory(
         MoodChartGenerator,
     )

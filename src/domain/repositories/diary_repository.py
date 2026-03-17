@@ -8,6 +8,7 @@ from domain.entities import Diary, StatsPeriod
 
 OrderBy = Literal["date_asc", "date_desc", "rating_asc", "rating_desc"]
 
+
 @dataclass
 class DiaryFilter:
     user_id: int

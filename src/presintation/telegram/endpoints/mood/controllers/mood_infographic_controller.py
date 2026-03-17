@@ -1,4 +1,6 @@
-from application.use_cases.generate_mood_infographic import GenerateMoodInfographicUseCase
+from application.use_cases.generate_mood_infographic import (
+    GenerateMoodInfographicUseCase,
+)
 
 
 class MoodInfographicController:
