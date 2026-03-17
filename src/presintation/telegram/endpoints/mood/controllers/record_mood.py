@@ -54,7 +54,7 @@ class RecordMoodController:
                     old_rating=exist_diary.old_rating,
                     new_rating=mood_value,
                     emoji=emoji,
-                    mood_value=mood_value,
+                    mood=mood_value,
                 )
                 await query.message.edit_text(  # type: ignore
                     text,
@@ -66,7 +66,7 @@ class RecordMoodController:
             else:
                 text = Messages.format(
                     Messages.MOOD_SAVED,
-                    mood_value=mood_value,
+                    mood=mood_value,
                     emoji=emoji,
                 )
                 await query.message.edit_text(  # type: ignore

@@ -1,5 +1,5 @@
 from .diary import Diary
 from .user import User
-from .stats_period import StatsPeriod
+from .stats_period import StatsPeriod, periods
 
-__all__ = ["Diary", "User", "StatsPeriod"]
+__all__ = ["Diary", "User", "StatsPeriod", "periods"]

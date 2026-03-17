@@ -6,22 +6,20 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Counter, His
 logger = logging.getLogger(__name__)
 
 bot_messages_total = Counter(
-    "bot_messages_total",
-    "Total messages processed",
-    ["platform", "command", "status"]
+    "bot_messages_total", "Total messages processed", ["platform", "command", "status"]
 )
 
 bot_request_duration = Histogram(
     "bot_request_duration_seconds",
     "Request duration in seconds",
-    ["platform", "command"]
+    ["platform", "command"],
 )
 
 
 class MetricsHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args) -> None:
         pass
-    
+
     def do_GET(self) -> None:
         if self.path == "/metrics":
             self.send_response(200)

@@ -24,3 +24,13 @@ class StatsPeriod(Enum):
     @property
     def callback_data(self) -> str:
         return f"stats_{self.value}"
+
+
+periods = [
+    StatsPeriod.WEEK,
+    StatsPeriod.MONTH,
+    StatsPeriod.QUARTER,
+    StatsPeriod.HALF_YEAR,
+    StatsPeriod.YEAR,
+    StatsPeriod.ALL,
+]
