@@ -5,6 +5,7 @@ from application.use_cases import (
     RecordMoodUseCase,
     RegisterUserUseCase,
 )
+from application.use_cases.generate_mood_infographic import GenerateMoodInfographicUseCase
 from application.use_cases.update_mood import UpdateMoodUseCase
 from infrastructure.ioc.container.infrastructure import InfrastructureContainer
 
@@ -32,4 +33,11 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     update_mood_use_case: providers.Factory[UpdateMoodUseCase] = providers.Factory(
         UpdateMoodUseCase, diary_repo=infrastructure.diary_repository.provided
+    )
+    
+    generate_mood_infographic_use_case:providers.Factory[GenerateMoodInfographicUseCase] = providers.Factory(
+        GenerateMoodInfographicUseCase,
+        diary_repo=infrastructure.diary_repository.provided,
+        user_repo=infrastructure.user_repository.provided,
+        chart_generator=infrastructure.chart_generator.provided,
     )

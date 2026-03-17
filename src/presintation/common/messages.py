@@ -3,9 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Messages:
-    # ─────────────────────────────────────────────────────────────
-    # Welcome / Start
-    # ─────────────────────────────────────────────────────────────
+
     WELCOME_TEXT = (
         "👋Привет, {full_name}!\n\n"
         "Я помогу тебе отслеживать настроение.\n"
@@ -14,6 +12,36 @@ class Messages:
     WELCOME_TEXT_FOR_REGISTERED_USER = (
         "✅ С возвращением, {full_name}!\n\nИспользуй /mood чтобы отметить настроение"
     )
+
+    INFOGRAPHIC_CAPTION = (
+        "{emoji} <b>Твоё настроение за {period}</b>\n\n"
+        "📈 <b>Статистика:</b>\n"
+        "• Записей: {total}\n"
+        "• Среднее: {avg:.1f}/10 ({mood_text})\n"
+        "• Мин/Макс: {min}/{max}\n"
+        "• Тренд: {trend_emoji} {trend_text}\n\n"
+        "<i>Сгенерировано @mood_diary_bbot</i>"
+    )
+
+    INFOGRAPHIC_EMPTY_CAPTION = (
+        "📊 <b>Нет данных за {period}</b>\n\n"
+        "Используй /mood чтобы начать отслеживать настроение!\n\n"
+        "<i>Сгенерировано @mood_diary_bbot</i>"
+    )
+
+    INOGRAPHIC_GENERATING = "🎨 Генерирую инфографику..."
+
+    TREND_TEXTS = {
+        "improving": "Улучшается",
+        "declining": "Ухудшается",
+        "stable": "Стабильно",
+    }
+
+    TREND_EMOJIS = {
+        "improving": "📈",
+        "declining": "📉",
+        "stable": "➡️",
+    }
 
     HELP_TEXT = (
         "📖 Справка по боту\n\n"
@@ -34,9 +62,6 @@ class Messages:
         "🔗 GitHub: https://github.com/ignavan39/mood_diary"
     )
 
-    # ─────────────────────────────────────────────────────────────
-    # Mood
-    # ─────────────────────────────────────────────────────────────
     MOOD_QUESTION = (
         "Как твоё настроение?\n\n"
         "Выберите значение от 0 до 10:\n"
@@ -58,9 +83,6 @@ class Messages:
         "Хотите обновить?"
     )
 
-    # ─────────────────────────────────────────────────────────────
-    # Stats
-    # ─────────────────────────────────────────────────────────────
     STATS_TITLE = "📊 Статистика: {period}"
 
     STATS_NO_DATA = (
@@ -88,6 +110,7 @@ class Messages:
     BTN_YES = "✅ Да, обновить"
     BTN_NO = "❌ Нет, отмена"
     BTN_CANCEL = "❌ Отмена"
+    BTN_EXPORT_INFORGRAPHIC = "📊 Экспортировать инфографику"
 
     PERIOD_LABELS = {
         7: "Неделя",
@@ -113,7 +136,7 @@ class Messages:
         "❌ Неверное значение, значение должно быть в диапазоне от 1 до 10"
     )
     ERROR_GENERIC = "⚠️ Ошибка. Попробуйте позже."
-
+    ERROR_GENERATE_INFOGRAPHIC = "❌ Ошибка при генерации инфографики. Попробуйте позже."
     @classmethod
     def format(cls, text: str, **kwargs) -> str:
         if not text:

@@ -1,10 +1,10 @@
-# src/main.py
 import asyncio
 import logging
 import sys
 from typing import List
 
 from infrastructure import AppContainer
+from infrastructure.concurrency import executor_pool
 from infrastructure.configs import settings
 from infrastructure.lifecycle import signal_handler
 from infrastructure.metrics import (
@@ -26,7 +26,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 container = AppContainer()
 
-
 async def on_startup() -> None:
     await container.infrastructure.container.redis_cache().get_connection()
     container.infrastructure.container.session_manager()
@@ -35,6 +34,7 @@ async def on_startup() -> None:
 
 async def on_shutdown() -> None:
     logger.info("Cleaning up...")
+    await executor_pool.shutdown_all()
 
     await container.infrastructure.redis_cache().close()
     await container.infrastructure.session_manager().close()
@@ -71,7 +71,7 @@ async def async_main() -> None:
     try:
         shutdown_received = await signal_handler.wait_for_shutdown()
         if shutdown_received:
-            logger.info("👋 Shutdown signal received")
+            logger.info("Shutdown signal received")
             await runner.stop_all()
 
         if not start_task.done():
@@ -85,7 +85,7 @@ async def async_main() -> None:
         await signal_handler.shutdown("KeyboardInterrupt")
         await runner.stop_all()
     except Exception as e:
-        logger.exception("💥 Fatal error: %s", e)
+        logger.exception("Fatal error: %s", e)
         await signal_handler.shutdown(f"Error: {e}")
         await runner.stop_all()
         sys.exit(1)
@@ -96,10 +96,10 @@ async def async_main() -> None:
 
 if __name__ == "__main__":
     try:
-        logger.info("✅ Mood Diary Bot starting...")
+        logger.info("Mood Diary Bot starting...")
         asyncio.run(async_main())
     except KeyboardInterrupt:
-        logger.info("👋 Goodbye!")
+        logger.info("Goodbye!")
     except Exception as e:
-        logger.exception("💥 Fatal error %s", e)
+        logger.exception("Fatal error %s", e)
         sys.exit(1)
