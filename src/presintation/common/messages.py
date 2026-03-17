@@ -54,7 +54,7 @@ class Messages:
     MOOD_DUPLICATE = (
         "⚠️Запись за {today} уже есть!\n\n"
         "Текущая: {old_rating}/10\n"
-        "Новая: {emoji} {mood_value}/10\n\n"
+        "Новая: {emoji} {mood}/10\n\n"
         "Хотите обновить?"
     )
 

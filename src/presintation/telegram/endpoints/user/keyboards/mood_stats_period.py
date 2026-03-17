@@ -1,19 +1,10 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from domain.entities import StatsPeriod
+from domain.entities import StatsPeriod, periods
 
 
 def create_mood_stats_period_keyboard() -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
-
-    periods = [
-        StatsPeriod.WEEK,
-        StatsPeriod.MONTH,
-        StatsPeriod.QUARTER,
-        StatsPeriod.HALF_YEAR,
-        StatsPeriod.YEAR,
-        StatsPeriod.ALL,
-    ]
 
     for period in periods:
         builder.button(
@@ -29,15 +20,6 @@ def create_mood_stats_with_refresh_keyboard(
     selected_period: StatsPeriod,
 ) -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
-
-    periods = [
-        StatsPeriod.WEEK,
-        StatsPeriod.MONTH,
-        StatsPeriod.QUARTER,
-        StatsPeriod.HALF_YEAR,
-        StatsPeriod.YEAR,
-        StatsPeriod.ALL,
-    ]
 
     for period in periods:
         prefix = "✅ " if period == selected_period else "📅 "

@@ -67,16 +67,16 @@ async def async_main() -> None:
     runner = BotRunner(bots)
 
     start_task = asyncio.create_task(runner.start_all())
-    
+
     try:
         shutdown_received = await signal_handler.wait_for_shutdown()
         if shutdown_received:
             logger.info("👋 Shutdown signal received")
             await runner.stop_all()
-        
+
         if not start_task.done():
             await start_task
-            
+
     except asyncio.CancelledError:
         logger.info("Task cancelled")
         await runner.stop_all()
