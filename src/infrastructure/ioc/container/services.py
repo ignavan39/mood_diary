@@ -9,16 +9,14 @@ from application.use_cases.generate_mood_infographic import (
     GenerateMoodInfographicUseCase,
 )
 from application.use_cases.update_mood import UpdateMoodUseCase
-from infrastructure.ioc.container.infrastructure import InfrastructureContainer
 
 
 class ServicesContainer(containers.DeclarativeContainer):
-    infrastructure: providers.Container[InfrastructureContainer] = providers.Container(
-        InfrastructureContainer
-    )
+    infrastructure = providers.DependenciesContainer()
 
     register_user_use_case: providers.Factory[RegisterUserUseCase] = providers.Factory(
-        RegisterUserUseCase, user_repo=infrastructure.user_repository.provided
+        RegisterUserUseCase,
+        user_repo=infrastructure.user_repository.provided,
     )
 
     get_user_stats_use_case: providers.Factory[GetUserStatsUseCase] = providers.Factory(
@@ -34,7 +32,8 @@ class ServicesContainer(containers.DeclarativeContainer):
     )
 
     update_mood_use_case: providers.Factory[UpdateMoodUseCase] = providers.Factory(
-        UpdateMoodUseCase, diary_repo=infrastructure.diary_repository.provided
+        UpdateMoodUseCase,
+        diary_repo=infrastructure.diary_repository.provided,
     )
 
     generate_mood_infographic_use_case: providers.Factory[

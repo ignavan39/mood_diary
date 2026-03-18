@@ -3,6 +3,8 @@ import logging
 import sys
 from typing import List
 
+from sqlalchemy import text
+
 from infrastructure import AppContainer
 from infrastructure.concurrency import executor_pool
 from infrastructure.configs import settings
@@ -29,8 +31,11 @@ container = AppContainer()
 
 async def on_startup() -> None:
     await container.infrastructure.container.redis_cache().get_connection()
-    container.infrastructure.container.session_manager()
-    logger.info("✅ All bots started")
+    session_manager = container.infrastructure.container.session_manager()
+    async with session_manager.get_session() as session:
+        await session.execute(text("SELECT 1"))
+
+    logger.info("✅ All connections warmed up")
 
 
 async def on_shutdown() -> None:
@@ -65,8 +70,8 @@ async def async_main() -> None:
 
     logger.info("Health: http://localhost:8080/health")
     logger.info("Metrics: http://localhost:8000/metrics")
-    runner = BotRunner(bots)
 
+    runner = BotRunner(bots)
     start_task = asyncio.create_task(runner.start_all())
 
     try:

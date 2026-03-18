@@ -1,4 +1,3 @@
-# application/use_cases/generate_mood_infographic.py
 import logging
 from datetime import datetime, timedelta, date
 from typing import List
@@ -42,8 +41,7 @@ class GenerateMoodInfographicUseCase:
             external_id=str(request.external_user_id), platfrom=request.platform
         )
         if user is None:
-            user_id = user.id if user is not None else None
-            raise UserNotFoundError(external_user_id=user_id)
+            raise UserNotFoundError(external_user_id=str(request.external_user_id))
 
         diaries = await self._get_diaries_for_period(user.id, request.days)
 
@@ -68,7 +66,7 @@ class GenerateMoodInfographicUseCase:
                 is_empty=True,
             )
 
-        chart_data = self._prepare_chart_data(diaries, request.days)
+        chart_data, stats = self._prepare_chart_data_and_stats(diaries, request.days)
 
         image_buffer = await self._chart_generator.generate(
             data=chart_data,
@@ -78,13 +76,11 @@ class GenerateMoodInfographicUseCase:
             user_id=user.id,
         )
 
-        stats = self._extract_stats(diaries, request.days)
-
         image_buffer.seek(0)
-        file_size = len(image_buffer.getvalue())
-
         logger.info(
-            "Infographic generated: %s (%d bytes)", stats.period_days, file_size
+            "Infographic generated: %s (%d bytes)",
+            stats.period_days,
+            len(image_buffer.getvalue()),
         )
 
         return GenerateInfographicResponse(
@@ -107,35 +103,43 @@ class GenerateMoodInfographicUseCase:
             )
         )
 
-    def _prepare_chart_data(self, diaries: List[Diary], days: int) -> ChartData:
+    def _prepare_chart_data_and_stats(
+        self, diaries: List[Diary], days: int
+    ) -> tuple[ChartData, InfographicStats]:
         values = [d.rating for d in diaries]
+        dates = [d.date for d in diaries]
 
-        return ChartData(
-            dates=[d.date for d in diaries],
+        total = len(values)
+        avg = sum(values) / total
+        min_mood = min(values)
+        max_mood = max(values)
+        trend = self._calculate_trend(values)
+
+        chart_data: ChartData = ChartData(
+            dates=dates,
             values=values,
             stats={
-                "total_entries": len(diaries),
-                "avg_mood": sum(values) / len(diaries),
-                "min_mood": min(values),
-                "max_mood": max(values),
-                "trend": self._calculate_trend(values),
+                "total_entries": total,
+                "avg_mood": avg,
+                "min_mood": min_mood,
+                "max_mood": max_mood,
+                "trend": trend,
             },
             period_days=days,
         )
 
-    def _extract_stats(self, diaries: List[Diary], days: int) -> InfographicStats:
-        values = [d.rating for d in diaries]
-
-        return InfographicStats(
-            total_entries=len(diaries),
-            avg_mood=sum(values) / len(values),
-            min_mood=min(values),
-            max_mood=max(values),
-            trend=self._calculate_trend(values),
+        stats = InfographicStats(
+            total_entries=total,
+            avg_mood=avg,
+            min_mood=min_mood,
+            max_mood=max_mood,
+            trend=trend,
             period_days=days,
-            first_entry_date=diaries[0].date if diaries else None,
-            last_entry_date=diaries[-1].date if diaries else None,
+            first_entry_date=dates[0] if dates else None,
+            last_entry_date=dates[-1] if dates else None,
         )
+
+        return chart_data, stats
 
     def _calculate_trend(self, values: List[int]) -> Trend:
         if len(values) < 2:

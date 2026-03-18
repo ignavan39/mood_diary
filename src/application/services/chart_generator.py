@@ -23,9 +23,9 @@ class ChartGeneratorInterface(ABC):
         theme: ChartTheme = "light",
         include_stats: bool = True,
         user_id: Optional[int] = None,
-        width: int = 1200,
-        height: int = 800,
-        dpi: int = 100,
+        width: int = 800,
+        height: int = 600,
+        dpi: int = 80,
     ) -> BytesIO:
         pass
 
