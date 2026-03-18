@@ -42,8 +42,7 @@ class RecordMoodUseCase:
             external_id=req.external_user_id, platfrom=req.platform
         )
         if user is None:
-            user_id = user.id if user is not None else None
-            raise UserNotFoundError(external_user_id=user_id)
+            raise UserNotFoundError(external_user_id=str(req.external_user_id))
 
         if req.rating < 0 or req.rating > 10:
             raise InvalidDiaryRatingError(rating=req.rating)
