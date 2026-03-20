@@ -29,6 +29,7 @@ class VkBot(BaseBot):
         polling = BotPolling(
             api=self._vk.api,
             error_handler=self._vk.error_handler,
+            group_id=self._group_id,
         )
         polling.listen()
 

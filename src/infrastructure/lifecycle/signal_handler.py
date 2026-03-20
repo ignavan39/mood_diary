@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import signal
-from typing import Optional, Callable, Coroutine, List
+from typing import Callable, Coroutine, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +17,23 @@ class SignalHandler:
 
     async def shutdown(self, reason: str = "Shutdown requested") -> None:
         if self._is_shutting_down:
-            logger.warning("Shutdown already in progress")
             return
 
         self._is_shutting_down = True
         logger.info("Shutdown initiated: %s", reason)
 
-        for callback in self._shutdown_callbacks:
-            try:
-                await callback()
-            except Exception as e:
-                logger.error("Error in shutdown callback: %s", e)
+        if self._shutdown_callbacks:
+            results = await asyncio.gather(
+                *[cb() for cb in self._shutdown_callbacks],
+                return_exceptions=True,
+            )
+            for cb, result in zip(self._shutdown_callbacks, results):
+                if isinstance(result, Exception):
+                    logger.error(
+                        "Error in shutdown callback %s: %s",
+                        getattr(cb, "__name__", cb),
+                        result,
+                    )
 
         self._shutdown_event.set()
         logger.info("Shutdown completed")
@@ -42,14 +48,16 @@ class SignalHandler:
     def install_handlers(self) -> None:
         loop = asyncio.get_running_loop()
 
-        loop.add_signal_handler(
-            signal.SIGINT, lambda: asyncio.create_task(self.shutdown("SIGINT received"))
-        )
-
-        loop.add_signal_handler(
-            signal.SIGTERM,
-            lambda: asyncio.create_task(self.shutdown("SIGTERM received")),
-        )
+        for sig, reason in (
+            (signal.SIGINT, "SIGINT received"),
+            (signal.SIGTERM, "SIGTERM received"),
+        ):
+            def func(r=reason) -> asyncio.Task[None]:
+                return asyncio.create_task(self.shutdown(r))
+            loop.add_signal_handler(
+                sig,
+                func,
+            )
 
         logger.info("Signal handlers installed (SIGINT, SIGTERM)")
 

@@ -79,33 +79,21 @@ async def async_main() -> None:
     logger.info("Health: http://localhost:8080/health")
     logger.info("Metrics: http://localhost:8000/metrics")
 
+    signal_handler.register_callback(on_shutdown)
+    signal_handler.install_handlers()
+
     runner = BotRunner(bots)
-    start_task = asyncio.create_task(runner.start_all())
 
-    try:
-        shutdown_received = await signal_handler.wait_for_shutdown()
-        if shutdown_received:
-            logger.info("Shutdown signal received")
-            await runner.stop_all()
+    await asyncio.gather(
+        runner.start_all(),
+        _wait_and_stop(runner),
+    )
 
-        if not start_task.done():
-            await start_task
 
-    except asyncio.CancelledError:
-        logger.info("Task cancelled")
-        await runner.stop_all()
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt")
-        await signal_handler.shutdown("KeyboardInterrupt")
-        await runner.stop_all()
-    except Exception as e:
-        logger.exception("Fatal error: %s", e)
-        await signal_handler.shutdown(f"Error: {e}")
-        await runner.stop_all()
-        sys.exit(1)
-    finally:
-        if not signal_handler.is_shutting_down:
-            await signal_handler.shutdown("Final cleanup")
+async def _wait_and_stop(runner: BotRunner) -> None:
+    await signal_handler.wait_for_shutdown()
+    logger.info("Shutdown signal received, stopping bots...")
+    await runner.stop_all()
 
 
 if __name__ == "__main__":
@@ -115,5 +103,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Goodbye!")
     except Exception as e:
-        logger.exception("Fatal error %s", e)
+        logger.exception("Fatal error: %s", e)
         sys.exit(1)
