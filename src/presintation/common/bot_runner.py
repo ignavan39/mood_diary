@@ -55,9 +55,7 @@ class BotRunner:
             try:
                 await bot.stop()
             except Exception as e:
-                logger.error(
-                    "Error stopping %s: %s", bot.get_platform_name(), e
-                )
+                logger.error("Error stopping %s: %s", bot.get_platform_name(), e)
 
         logger.info("All bots stopped")
 
@@ -101,7 +99,7 @@ class BotRunner:
                     )
                     raise
 
-                delay = _RESTART_DELAY * restarts 
+                delay = _RESTART_DELAY * restarts
                 logger.info(
                     "Restarting %s bot in %.1fs... (%d/%d)",
                     platform,

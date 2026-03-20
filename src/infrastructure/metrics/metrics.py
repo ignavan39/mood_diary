@@ -1,8 +1,10 @@
+import functools
 import logging
 import time
 from contextlib import asynccontextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
+from typing import Callable
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
@@ -13,6 +15,7 @@ from prometheus_client import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 bot_messages_total = Counter(
     "bot_messages_total",
@@ -68,16 +71,24 @@ async def track_handler(platform: str, command: str):
         ).inc()
         raise
     finally:
-        duration = time.perf_counter() - start
         bot_messages_total.labels(
-            platform=platform,
-            command=command,
-            status=status,
+            platform=platform, command=command, status=status
         ).inc()
-        bot_request_duration.labels(
-            platform=platform,
-            command=command,
-        ).observe(duration)
+        bot_request_duration.labels(platform=platform, command=command).observe(
+            time.perf_counter() - start
+        )
+
+
+def track(platform: str, command: str) -> Callable:
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            async with track_handler(platform, command):
+                return await func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class MetricsHandler(BaseHTTPRequestHandler):

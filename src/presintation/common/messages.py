@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-
-
-@dataclass
 class Messages:
     WELCOME_TEXT = (
         "👋Привет, {full_name}!\n\n"
@@ -103,6 +99,7 @@ class Messages:
 
     BTN_MOOD = "🎯 Оценить настроение"
     BTN_STATS = "📊 Моя статистика"
+    BTN_EXPORT = "📈 Экспорт"
     BTN_HELP = "📖 Помощь"
     BTN_PROFILE = "👤 Профиль"
     BTN_MAIN_MENU = "🏠 Главное меню"
@@ -110,6 +107,15 @@ class Messages:
     BTN_NO = "❌ Нет, отмена"
     BTN_CANCEL = "❌ Отмена"
     BTN_EXPORT_INFORGRAPHIC = "📊 Экспортировать инфографику"
+
+    BTN_COMMAND_MAP: dict[str, str] = {
+        BTN_MOOD: "mood",
+        BTN_STATS: "stats",
+        BTN_EXPORT: "export",
+        BTN_HELP: "help",
+        BTN_PROFILE: "profile",
+        BTN_MAIN_MENU: "start",
+    }
 
     PERIOD_LABELS = {
         7: "Неделя",
@@ -140,10 +146,13 @@ class Messages:
     )
 
     @classmethod
+    def get_command_by_btn(cls, text: str) -> str | None:
+        return cls.BTN_COMMAND_MAP.get(text.strip())
+
+    @classmethod
     def format(cls, text: str, **kwargs) -> str:
         if not text:
             return "[[MISSING_TEXT]]"
-
         try:
             return text.format(**kwargs)
         except KeyError as e:
