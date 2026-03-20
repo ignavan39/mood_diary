@@ -134,7 +134,7 @@ python -m src.main
 
 | Переменная | Описание | Обязательно |
 |---|---|---|
-| `TG_BOT_TOKEN` | Токен Telegram бота | ✅ |
+| `TG_BOT_TOKEN` | Токен Telegram бота | ❌ |
 | `VK_BOT_TOKEN` | Токен сообщества VK | ❌ |
 | `VK_BOT_GROUP_ID` | ID группы VK (число) | ❌ |
 | `PG__USER` | Пользователь PostgreSQL | ✅ |
@@ -144,6 +144,8 @@ python -m src.main
 | `PG__PORT` | Порт PostgreSQL | ✅ |
 | `REDIS__HOST` | Хост Redis | ✅ |
 | `REDIS__PASSWORD` | Пароль Redis | ✅ |
+| `GRAFANA_USER` | Пользователь Grafana | ❌ |
+| `GRAFANA_PASSWORD` | Пароль Grafana | ❌ |
 
 ---
 
@@ -207,7 +209,8 @@ mood-diary-bot/
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Presentation (Telegram / VK handlers)       │
+│ Presentation (Telegram / VK handlers)       |
+|  (aiogram, vkbottle)                        │
 │ → зависит от Application                    │
 └─────────────────┬───────────────────────────┘
                   ↓
@@ -222,8 +225,8 @@ mood-diary-bot/
 └─────────────────────────────────────────────┘
                   ↑
 ┌─────────────────────────────────────────────┐
-│ Infrastructure (SQLAlchemy, aiogram,        │
-│ vkbottle, matplotlib)                       │
+│ Infrastructure (SQLAlchemy, redis,          │
+│ matplotlib)                                 │
 │ → реализует Domain интерфейсы               │
 └─────────────────────────────────────────────┘
 ```
@@ -268,7 +271,7 @@ mood-diary-bot/
 | **Config** | Pydantic Settings | Валидация настроек, типизация, .env-поддержка |
 | **Migrations** | Alembic | Управление схемой БД |
 | **DI** | dependency-injector | IoC контейнер, разделение слоёв |
-| **Cache** | Redis (aioredis) | Состояния сессий |
+| **Cache** | Redis (redis) | Состояния сессий |
 | **Monitoring** | Prometheus + Grafana | Метрики и дашборды |
 | **Containerization** | Docker, Compose | Воспроизводимая среда, лёгкий деплой |
 | **Package Manager** | uv | Быстрая установка зависимостей |

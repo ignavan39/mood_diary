@@ -38,7 +38,7 @@ class VkBot(BaseBot):
 
     @staticmethod
     def get_platform_name() -> str:
-        return "VK"
+        return "vk"
 
 
 def create_vk_bot(container: "AppContainer") -> "VkBot | None":
