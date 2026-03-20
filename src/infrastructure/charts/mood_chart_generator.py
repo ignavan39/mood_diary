@@ -15,6 +15,7 @@ from infrastructure.concurrency import executor_pool
 
 logger = logging.getLogger(__name__)
 
+
 class ThemeColors(TypedDict):
     bg: str
     fg: str
@@ -87,6 +88,7 @@ class MoodChartGenerator(ChartGeneratorInterface):
         dpi: int,
     ) -> BytesIO:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.dates as mdates
         from matplotlib.figure import Figure
@@ -95,7 +97,9 @@ class MoodChartGenerator(ChartGeneratorInterface):
 
         theme_colors: ThemeColors = self.THEMES[theme]
 
-        fig = Figure(figsize=(width / dpi, height / dpi), dpi=dpi, facecolor=theme_colors["bg"])
+        fig = Figure(
+            figsize=(width / dpi, height / dpi), dpi=dpi, facecolor=theme_colors["bg"]
+        )
         FigureCanvasAgg(fig)
         ax = fig.add_subplot(111)
 
@@ -179,19 +183,24 @@ class MoodChartGenerator(ChartGeneratorInterface):
         dpi: int,
     ) -> BytesIO:
         import matplotlib
+
         matplotlib.use("Agg")
         from matplotlib.figure import Figure
         from matplotlib.backends.backend_agg import FigureCanvasAgg
 
         colors: ThemeColors = self.THEMES[theme]
 
-        fig = Figure(figsize=(width / dpi, height / dpi), dpi=dpi, facecolor=colors["bg"])
+        fig = Figure(
+            figsize=(width / dpi, height / dpi), dpi=dpi, facecolor=colors["bg"]
+        )
         FigureCanvasAgg(fig)
         ax = fig.add_subplot(111)
         ax.set_facecolor(colors["bg"])
 
         ax.text(
-            0.5, 0.6, "[!]",
+            0.5,
+            0.6,
+            "[!]",
             transform=ax.transAxes,
             ha="center",
             fontsize=32,
@@ -199,7 +208,8 @@ class MoodChartGenerator(ChartGeneratorInterface):
             fontweight="bold",
         )
         ax.text(
-            0.5, 0.4,
+            0.5,
+            0.4,
             f"Нет данных за {period_days} дней",
             transform=ax.transAxes,
             ha="center",
@@ -208,7 +218,8 @@ class MoodChartGenerator(ChartGeneratorInterface):
             fontweight="bold",
         )
         ax.text(
-            0.5, 0.3,
+            0.5,
+            0.3,
             "Используй /mood чтобы начать",
             transform=ax.transAxes,
             ha="center",
@@ -243,7 +254,9 @@ class MoodChartGenerator(ChartGeneratorInterface):
     ) -> None:
         if not dates:
             return
-        ax.plot(dates, values, color=colors["line"], linewidth=2, marker="o", markersize=4)
+        ax.plot(
+            dates, values, color=colors["line"], linewidth=2, marker="o", markersize=4
+        )
         ax.fill_between(dates, values, 0, color=colors["fill"], alpha=0.3)
         ax.set_xlabel("Дата", color=colors["fg"])
         ax.set_ylabel("Настроение", color=colors["fg"])
@@ -293,7 +306,9 @@ class MoodChartGenerator(ChartGeneratorInterface):
             ax.set_xticklabels(["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"])
             fig.colorbar(im, ax=ax, label="Настроение")
 
-    def _draw_stats_box_sync(self, ax, stats: dict, colors: ThemeColors, Rectangle) -> None:
+    def _draw_stats_box_sync(
+        self, ax, stats: dict, colors: ThemeColors, Rectangle
+    ) -> None:
         x_pos, y_pos, box_width, box_height = 0.72, 0.85, 0.25, 0.12
         rect = Rectangle(
             (x_pos, y_pos - box_height),

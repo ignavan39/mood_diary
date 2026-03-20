@@ -19,9 +19,14 @@ dependencies = [
     "ruff>=0.15.4",
     "six>=1.17.0",
     "sqlalchemy[asyncio]>=2.0.47",
+    "vkbottle>=4.7.0",
 ]
 
-
+[[tool.mypy.overrides]]
+module = [
+    "vkbottle.*",
+]
+ignore_missing_imports = true
 [tool.alembic]
 
 # path to migration scripts.

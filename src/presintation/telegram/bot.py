@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramBot(BaseBot):
-    def __init__(self, container: "AppContainer") -> None:
+    def __init__(self, container: "AppContainer", token: str) -> None:
         super().__init__(container)
         session = AiohttpSession(timeout=120)
 
         self._bot = Bot(
-            token=settings.tg_bot.token,
+            token=token,
             default=DefaultBotProperties(parse_mode="HTML"),
             session=session,
         )
@@ -51,8 +51,10 @@ class TelegramBot(BaseBot):
 
 
 def create_telegram_bot(container: "AppContainer") -> "TelegramBot | None":
-    if not settings.tg_bot.enabled:
-        logger.info("Telegram bot disabled (TG_BOT_ENABLED=false)")
+    if not settings.tg_bot.enabled or settings.tg_bot.token is None:
+        logger.info(
+            "TG__BOT_TOKEN not set Telegram bot disabled (TG_BOT_ENABLED=false)"
+        )
         return None
 
-    return TelegramBot(container)
+    return TelegramBot(container, settings.tg_bot.token)

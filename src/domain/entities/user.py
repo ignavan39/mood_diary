@@ -3,7 +3,7 @@ from typing import List, Literal, Optional
 
 from domain.entities.diary import Diary
 
-Platform = Literal["telegram", "max", 'vk']
+Platform = Literal["telegram", "max", "vk"]
 
 
 @dataclass
