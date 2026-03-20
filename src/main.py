@@ -1,3 +1,4 @@
+# main.py
 import asyncio
 import logging
 import sys
@@ -34,30 +35,37 @@ async def on_startup() -> None:
     session_manager = container.infrastructure.container.session_manager()
     async with session_manager.get_session() as session:
         await session.execute(text("SELECT 1"))
-
-    logger.info("✅ All connections warmed up")
+    logger.info("All connections warmed up")
 
 
 async def on_shutdown() -> None:
     logger.info("Cleaning up...")
     await executor_pool.shutdown_all()
-
     await container.infrastructure.redis_cache().close()
     await container.infrastructure.session_manager().close()
-
     logger.info("Cleanup completed")
 
 
 async def async_main() -> None:
     logger.info("Initializing infrastructure...")
     await on_startup()
-
     logger.info("Infrastructure initialized")
 
     bots: List[BaseBot] = []
 
-    telegram_bot = create_telegram_bot(container)
-    bots.append(telegram_bot)
+    tg_bot = create_telegram_bot(container)
+    if tg_bot is not None:
+        bots.append(tg_bot)
+
+    # vk_bot = create_vk_bot(container)
+    # if vk_bot is not None:
+    #     bots.append(vk_bot)
+
+    if not bots:
+        logger.error(
+            "No bots enabled — set TG_BOT_ENABLED=true or VK_BOT_ENABLED=true in .env"
+        )
+        sys.exit(1)
 
     logger.info(
         "Created %d bot(s): %s",

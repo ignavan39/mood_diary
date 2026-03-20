@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,9 +37,20 @@ class DatabaseConfig(BaseSettings):
 
 class TgBotConfig(BaseSettings):
     token: str
+    enabled: bool = True
 
     model_config = SettingsConfigDict(
-        env_prefix="TG_BOT_", extra="ignore", env_file=".env"
+        env_prefix="TG__BOT_", extra="ignore", env_file=".env"
+    )
+
+
+class VkBotConfig(BaseSettings):
+    token: str
+    group_id: int
+    enabled: bool = True
+
+    model_config = SettingsConfigDict(
+        env_prefix="VK__BOT_", extra="ignore", env_file=".env"
     )
 
 
@@ -45,6 +58,7 @@ class Settings(BaseSettings):
     db: DatabaseConfig = DatabaseConfig()  # type: ignore
     tg_bot: TgBotConfig = TgBotConfig()  # type: ignore
     redis_cache: RedisCacheConfig = RedisCacheConfig()  # type: ignore
+    vk_bot: Optional[VkBotConfig] = None
 
     debug: bool = False
     log_level: str = "INFO"
@@ -61,6 +75,12 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
         extra="ignore",
     )
+
+    def model_post_init(self, __context) -> None:
+        try:
+            self.vk_bot = VkBotConfig()  # type: ignore
+        except Exception:
+            self.vk_bot = None
 
 
 settings = Settings()  # type: ignore
