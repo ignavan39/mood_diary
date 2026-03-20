@@ -10,6 +10,7 @@ from presintation.telegram.commands import commands
 from presintation.telegram.endpoints.help import help_router
 from presintation.telegram.endpoints.mood import mood_router
 from presintation.telegram.endpoints.user import user_router
+from presintation.telegram.middlewares import ErrorHandlerMiddleware, MetricsMiddleware
 
 if TYPE_CHECKING:
     from infrastructure import AppContainer
@@ -28,6 +29,13 @@ class TelegramBot(BaseBot):
             session=session,
         )
         self._dp = Dispatcher()
+
+        self._dp.message.middleware(MetricsMiddleware())
+        self._dp.callback_query.middleware(MetricsMiddleware())
+
+        self._dp.message.middleware(ErrorHandlerMiddleware())
+        self._dp.callback_query.middleware(ErrorHandlerMiddleware())
+
         self._dp.include_routers(user_router, mood_router, help_router)
         self._dp.startup.register(self._on_startup)
 
@@ -47,7 +55,7 @@ class TelegramBot(BaseBot):
 
     @staticmethod
     def get_platform_name() -> str:
-        return "Telegram"
+        return "telegram"
 
 
 def create_telegram_bot(container: "AppContainer") -> "TelegramBot | None":
@@ -57,4 +65,4 @@ def create_telegram_bot(container: "AppContainer") -> "TelegramBot | None":
         )
         return None
 
-    return TelegramBot(container, settings.tg_bot.token)
+    return TelegramBot(container, token=settings.tg_bot.token)

@@ -52,8 +52,10 @@ class SignalHandler:
             (signal.SIGINT, "SIGINT received"),
             (signal.SIGTERM, "SIGTERM received"),
         ):
+
             def func(r=reason) -> asyncio.Task[None]:
                 return asyncio.create_task(self.shutdown(r))
+
             loop.add_signal_handler(
                 sig,
                 func,
