@@ -1,11 +1,11 @@
 version: '3.8'
 
-
 volumes:
   postgres_data:
   redis_data:
   prometheus:
   grafana:
+
 services:
   postgres:
     container_name: mood_diary_db
@@ -49,11 +49,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${PG__USER:-user} -d ${PG__NAME:-mood_diary}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${PG__USER:-user} -d ${PG__NAME:-mood_diary}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,53 +65,100 @@ services:
   redis:
     container_name: mood-diary-redis
     image: "redis:7-alpine"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-password}
+    command: redis-server --requirepass ${REDIS__PASSWORD:-password}
     volumes:
       - redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS__PORT:-6379}:6379"
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
+      - REDIS_PASSWORD=${REDIS__PASSWORD:-password}
     networks:
       - mood-diary-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-password}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS__PASSWORD:-password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
-  grafana:
-    image: grafana/grafana:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: mood-diary-postgres-exporter
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA__USER:-admin123}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD:-admin123}
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
-    volumes:
-      - grafana:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      DATA_SOURCE_NAME: "postgresql://${PG__USER:-user}:${PG__PASSWORD:-pass}@postgres:5432/${PG__NAME:-mood_diary}?sslmode=disable"
     depends_on:
-      - prometheus
+      postgres:
+        condition: service_healthy
     networks:
       - mood-diary-network
+    restart: unless-stopped
 
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: mood-diary-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: "${REDIS__PASSWORD:-password}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - mood-diary-network
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: mood-diary-node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - mood-diary-network
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:latest
+    container_name: mood-diary-prometheus
     restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml
       - prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - mood-diary-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mood-diary-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/mood-diary.json
+      - GF_USERS_DEFAULT_THEME=dark
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
     networks:
       - mood-diary-network
 
@@ -125,7 +168,7 @@ services:
       dockerfile: Dockerfile.migrate
     env_file: .env
     depends_on:
-       postgres:
+      postgres:
         condition: service_healthy
     stdin_open: true
     tty: true
@@ -139,24 +182,23 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-     - .:/src
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       migrate:
-        condition: service_completed_successfully 
+        condition: service_completed_successfully
     env_file:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "print('OK')"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 40s
     networks:
       - mood-diary-network
 

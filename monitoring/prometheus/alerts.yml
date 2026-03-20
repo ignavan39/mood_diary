@@ -1,5 +1,5 @@
 groups:
-  - name: mood-diary-alerts
+  - name: mood-diary-bot
     rules:
       - alert: BotDown
         expr: up{job="mood-diary-bot"} == 0
@@ -7,17 +7,20 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Бот не работает!"
-          description: "Бот не отвечает уже 1 минуту"
+          summary: "Бот не работает"
+          description: "Бот не отвечает уже больше минуты"
 
       - alert: HighErrorRate
-        expr: rate(bot_messages_total{status="error"}[5m]) > 0.1
+        expr: |
+          sum(rate(bot_messages_total{status="error"}[5m]))
+          /
+          sum(rate(bot_messages_total[5m])) > 0.1
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "Много ошибок в боте"
-          description: "Более 10% запросов с ошибками"
+          summary: "Высокий процент ошибок"
+          description: "Более 10% запросов завершаются ошибкой (сейчас {{ $value | humanizePercentage }})"
 
       - alert: SlowResponses
         expr: histogram_quantile(0.95, rate(bot_request_duration_seconds_bucket[5m])) > 2
@@ -25,5 +28,52 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Бот отвечает медленно"
-          description: "95% запросов дольше 2 секунд"
+          summary: "Медленные ответы бота"
+          description: "P95 времени ответа превышает 2 секунды (сейчас {{ $value | humanizeDuration }})"
+
+      - alert: ExportTooSlow
+        expr: histogram_quantile(0.95, rate(bot_export_duration_seconds_bucket[10m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Генерация инфографики слишком медленная"
+          description: "P95 генерации графика превышает 30 секунд (сейчас {{ $value | humanizeDuration }})"
+
+  - name: infrastructure
+    rules:
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL недоступен"
+          description: "PostgreSQL не отвечает"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis недоступен"
+          description: "Redis не отвечает"
+
+      - alert: HighMemoryUsage
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Мало свободной памяти"
+          description: "Доступно менее 10% RAM (свободно {{ $value | humanizePercentage }})"
+
+      - alert: HighDiskUsage
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Мало места на диске"
+          description: "Занято более 90% диска (свободно {{ $value | humanizePercentage }})"
