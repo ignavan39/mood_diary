@@ -26,7 +26,7 @@ class ExecutorPool:
 
     async def shutdown_all(self) -> None:
         for name, executor in self._executors.items():
-            logger.info("🛑 Shutting down executor pool '%s'", name)
+            logger.info("Shutting down executor pool '%s'", name)
             executor.shutdown(wait=True)
 
         self._executors.clear()

@@ -33,22 +33,26 @@ class TelegramBot(BaseBot):
 
     async def _on_startup(self) -> None:
         await self._bot.set_my_commands(commands)
-        logger.info("✅ Bot commands registered")
+        logger.info("Bot commands registered")
 
     async def start(self) -> None:
         logger.info("🚀 Starting Telegram Bot (polling)...")
         await self._dp.start_polling(self._bot)
 
     async def stop(self) -> None:
-        logger.info("🛑 Stopping Telegram Bot...")
+        logger.info("Stopping Telegram Bot...")
         await self._bot.session.close()
         await self._bot.close()
-        logger.info("✅ Telegram Bot stopped")
+        logger.info("Telegram Bot stopped")
 
     @staticmethod
     def get_platform_name() -> str:
         return "Telegram"
 
 
-def create_telegram_bot(container: "AppContainer") -> TelegramBot:
+def create_telegram_bot(container: "AppContainer") -> "TelegramBot | None":
+    if not settings.tg_bot.enabled:
+        logger.info("Telegram bot disabled (TG_BOT_ENABLED=false)")
+        return None
+
     return TelegramBot(container)

@@ -1,4 +1,4 @@
-# 📓 Mood Diary — Телеграм-бот для отслеживания настроения
+# 📓 Mood Diary — Бот для отслеживания настроения
 
 > Простой и приватный способ фиксировать своё эмоциональное состояние каждый день.
 
@@ -23,31 +23,31 @@
 - [Мониторинг](#-мониторинг)
 - [Технологии](#-технологии)
 
-
+---
 
 ## 📋 О проекте
 
-**Mood Diary** — это телеграм-бот, который помогает пользователю раз в день оценивать своё настроение по шкале от **0 до 10**. Все данные сохраняются в базе, что позволяет отслеживать динамику эмоционального состояния, строить графики и анализировать паттерны.
+**Mood Diary** — это мультиплатформенный бот (Telegram + VK), который помогает пользователю раз в день оценивать своё настроение по шкале от **0 до 10**. Все данные сохраняются в базе, что позволяет отслеживать динамику эмоционального состояния, строить графики и анализировать паттерны.
 
 ### ✨ Возможности
 - 🎯 Оценка настроения одним нажатием (шкала 0–10)
-- 📅 Напоминание раз в день (настраиваемое время)
-- 📊 Просмотр истории и статистики за неделю/месяц
-- 🧱 Чистая архитектура: Domain → Repository → Infrastructure
+- 📊 Просмотр истории и статистики за неделю/месяц/год
+- 📈 Генерация инфографики с графиком настроения (`/export`)
+- 💬 Поддержка Telegram и VK (одна база, разные платформы)
+- 🧱 Чистая архитектура: Domain → Application → Infrastructure → Presentation
 
 ---
-
 
 ## 🔍 Поиск по проекту
 
 Этот репозиторий может быть полезен если ты ищешь:
 
-- пример бота на aiogram 3.x
+- пример бота на aiogram 3.x и vkbottle 4.x
 - шаблон Clean Architecture на Python
+- мультиплатформенный бот (Telegram + VK) с общей бизнес-логикой
 - интеграция Prometheus + Grafana для мониторинга
 - асинхронный PostgreSQL с SQLAlchemy 2.0
 - self-hosted решение для ментального здоровья
-- телеграм бот для дневника настроения
 
 ---
 
@@ -58,6 +58,7 @@
 - PostgreSQL 14+
 - Docker и Docker Compose *(опционально, но рекомендуется)*
 - Токен бота от [@BotFather](https://t.me/BotFather)
+- Токен сообщества VK *(опционально)*
 
 ### 🐳 Запуск через Docker Compose (рекомендуется)
 
@@ -70,23 +71,27 @@ cd mood_diary
 2. Создайте файл окружения `.env` в корне проекта:
 ```env
 # Telegram
-TG_BOT__TOKEN=your_telegram_bot_token_here
+TG_BOT_TOKEN=your_telegram_bot_token_here
+
+# VK (опционально — если не нужен, просто не добавляй)
+VK_BOT_TOKEN=vk1.a.xxxxxxxxxxxxxxxx
+VK_BOT_GROUP_ID=123456789
 
 # Database
 PG__USER=
 PG__PASSWORD=
-PG__HOST=
-PG__NAME=
-PG__PORT=
+PG__HOST=postgres
+PG__NAME=mood_diary
+PG__PORT=5432
 
-# App
-TIMEZONE=Europe/Moscow
-REMINDER_TIME=20:00
+# Redis
+REDIS__HOST=redis
+REDIS__PORT=6379
+REDIS__PASSWORD=password
 
 # Monitoring
-
-GRAFANA_PASSWORD=
-GRAFANA_USER=
+GRAFANA_USER=admin
+GRAFANA_PASSWORD=admin123
 ```
 
 3. Запустите сервисы:
@@ -94,26 +99,13 @@ GRAFANA_USER=
 docker compose up -d
 ```
 
-4. Примените миграции:
+Миграции применятся автоматически через образ `migrate` при первом запуске.
 
-в целом при сборке всех приложений запуститься образ migrate и накатит миграции сам
-если требуется отдельно то:
-
-
-```bash
-docker compose exec app alembic upgrade head
-```
-или
-
-```bash
-docker compose up --build postgres migrate
-```
-
-5. Запустите бота и напишите ему в Telegram `/start`
+4. Напишите боту `/start` в Telegram или VK.
 
 ### 💻 Локальный запуск (без Docker)
 
-1. Установите зависимости (рекомендуется использовать `uv`):
+1. Установите зависимости:
 ```bash
 # Если установлен uv
 uv sync
@@ -140,112 +132,120 @@ python -m src.main
 
 Все настройки задаются через переменные окружения или файл `.env`.
 
+| Переменная | Описание | Обязательно |
+|---|---|---|
+| `TG_BOT_TOKEN` | Токен Telegram бота | ✅ |
+| `VK_BOT_TOKEN` | Токен сообщества VK | ❌ |
+| `VK_BOT_GROUP_ID` | ID группы VK (число) | ❌ |
+| `PG__USER` | Пользователь PostgreSQL | ✅ |
+| `PG__PASSWORD` | Пароль PostgreSQL | ✅ |
+| `PG__HOST` | Хост PostgreSQL | ✅ |
+| `PG__NAME` | Имя базы данных | ✅ |
+| `PG__PORT` | Порт PostgreSQL | ✅ |
+| `REDIS__HOST` | Хост Redis | ✅ |
+| `REDIS__PASSWORD` | Пароль Redis | ✅ |
+
+---
 
 ## 🗂️ Структура проекта
 
 ```
 mood-diary-bot/
-├── README.md                     # Этот файл
+├── README.md
 ├── src/
-│   ├── main.py                   # Точка входа
-│   ├── domain/                   # Domain слой
-|   |   ├── dtos/                 # DTO для запросов/ответов
-│   │   ├── entities/             # Бизнес-сущности
-│   │   ├── repositories/         # Интерфейсы репозиториев
-│   │   └── exceptions/           # Domain исключения
-│   ├── application/              # Application слой
-│   │   ├── use_cases/            # Бизнес-логика
-│   │   └── dtos/                 # DTO для запросов/ответов
-│   ├── infrastructure/           # Infrastructure слой
-│   │   ├── database/             # SQLAlchemy, модели, репозитории
-│   │   ├── ioc/                  # DI контейнер
-│   │   └── configs/              # Настройки
-│   └── presintation/             # Presentation слой
-│       └── telegram/
-|           ├── utils/             # Утилиты
-│           └── endpoints
-|               ├── mood/           # Mood контроллеры
-|               │   ├── controllers/
-|               │   └── router.py
-|               └── user/           # User контроллеры
-|                   ├── controllers/
-|                   └── router.py  
-├──monitoring/
-|   └── grafana/
-|       ├──prometheus.yml     # Конфиг сбора метрик
+│   ├── main.py                        # Точка входа, запуск всех ботов
+│   ├── domain/                        # Domain слой — бизнес-сущности
+│   │   ├── dtos/                      # SaveDiaryDTO, SaveUserDTO, UpdateDiaryDTO
+│   │   ├── entities/                  # User, Diary, StatsPeriod
+│   │   ├── repositories/              # Интерфейсы DiaryRepository, UserRepository
+│   │   └── exceptions/                # Domain исключения
+│   ├── application/                   # Application слой — бизнес-логика
+│   │   ├── use_cases/                 # RegisterUser, RecordMood, GetUserStats,
+│   │   │                              # UpdateMood, GenerateMoodInfographic
+│   │   ├── services/                  # ChartGeneratorInterface
+│   │   └── dtos/                      # DTO запросов/ответов use cases
+│   ├── infrastructure/                # Infrastructure слой
+│   │   ├── database/                  # SQLAlchemy модели и репозитории
+│   │   │   ├── models/                # UserModel, DiaryModel
+│   │   │   └── repositories/          # SQLAlchemy реализации репозиториев
+│   │   ├── charts/                    # MoodChartGenerator (matplotlib)
+│   │   ├── cache/redis/               # RedisManager
+│   │   ├── concurrency/               # ExecutorPool для CPU-задач
+│   │   ├── configs/                   # Settings (pydantic-settings)
+│   │   ├── ioc/container/             # DI контейнеры (dependency-injector)
+│   │   ├── lifecycle/                 # SignalHandler
+│   │   └── metrics/                   # Prometheus метрики, Health check
+│   └── presintation/                  # Presentation слой
+│       ├── common/                    # BaseBot, BotRunner, Messages
+│       ├── telegram/                  # Telegram бот (aiogram 3.x)
+│       │   ├── bot.py
+│       │   ├── commands/
+│       │   └── endpoints/
+│       │       ├── mood/              # /mood, /export
+│       │       ├── user/              # /start, /profile
+│       │       └── help/              # /help
+│       └── vk/                        # VK бот (vkbottle 4.x)
+│           ├── bot.py
+│           └── keyboards.py
+├── monitoring/
+│   └── grafana/
+│       ├── prometheus.yml
 │       └── provisioning/
 │           ├── dashboards/
-│           │   ├── dashboards.yml      # Конфиг авто-загрузки дашбордов
-│           │   └── mood-diary.json     # Готовый дашборд с метриками
 │           └── datasources/
-│               └── prometheus.yml      # Подключение Prometheus
-├── pyproject.toml           # Зависимости и метаданные проекта
-├── uv.lock                  # Lock-файл зависимостей (uv)
-├── alembic.ini              # Настройки Alembic
-├── docker-compose.yml       # Оркестрация сервисов
-├── Dockerfile               # Образ приложения
-└── .env.example             # Шаблон переменных окружения
+├── pyproject.toml
+├── uv.lock
+├── alembic.ini
+├── docker-compose.yml
+├── Dockerfile
+└── .env.example
 ```
-
-## 🔁 Поток данных
-```
-┌─────────────────────────────────────────┐
-│ Presentation (Telegram handlers)        │
-│ → зависит от Application                │
-└─────────────────┬───────────────────────┘
-↓
-┌─────────────────────────────────────────┐
-│ Application (Use Cases, DTOs)           │
-│ → зависит от Domain                     │
-└─────────────────┬───────────────────────┘
-↓
-┌─────────────────────────────────────────┐
-│ Domain (Entities, Repository Interfaces)│
-│ → НЕ зависит ни от чего                 │
-└─────────────────────────────────────────┘
-↑
-┌─────────────────────────────────────────┐
-│ Infrastructure (SQLAlchemy, aiogram)    │
-│ → реализует Domain интерфейсы           │
-└─────────────────────────────────────────┘
-```
-
-![data-thread](./docs/docker/docker-architecture-1.png)
 
 ---
+
+## 🔁 Поток данных
+
+```
+┌─────────────────────────────────────────────┐
+│ Presentation (Telegram / VK handlers)       │
+│ → зависит от Application                    │
+└─────────────────┬───────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ Application (Use Cases, DTOs)               │
+│ → зависит от Domain                         │
+└─────────────────┬───────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ Domain (Entities, Repository Interfaces)    │
+│ → НЕ зависит ни от чего                     │
+└─────────────────────────────────────────────┘
+                  ↑
+┌─────────────────────────────────────────────┐
+│ Infrastructure (SQLAlchemy, aiogram,        │
+│ vkbottle, matplotlib)                       │
+│ → реализует Domain интерфейсы               │
+└─────────────────────────────────────────────┘
+```
+
+Оба бота (Telegram и VK) используют **одни и те же use cases** и **одну базу данных**. Пользователи разделяются по полю `platform` (`telegram` / `vk`).
+
+---
+
 ## 📊 Мониторинг
 
-Папка `monitoring/` содержит конфигурацию Prometheus + Grafana:
+Папка `monitoring/` содержит конфигурацию Prometheus + Grafana.
 
-
-### 📈 Что внутри:
-
-| Компонент | Описание |
-|-----------|----------|
-| **Grafana dashboards** | Готовый дашборд с метриками бота (сообщения, ошибки, время ответа, пользователи) |
-| **Prometheus config** | Настройка скрейпинга метрик с бота и PostgreSQL |
-| **Auto-provisioning** | Дашборды и datasource подключаются автоматически при старте |
-
-### 🔗 Доступ к интерфейсам:
+### 🔗 Доступ к интерфейсам
 
 | Сервис | URL | Логин/Пароль |
 |--------|-----|--------------|
 | **Grafana** | http://localhost:3000 | admin / admin123 |
 | **Prometheus** | http://localhost:9090 | — |
 | **Bot Metrics** | http://localhost:8000/metrics | — |
+| **Health** | http://localhost:8080/health | — |
 
-### 🚀 Быстрый старт:
-
-```bash
-# Запустить весь стек с мониторингом
-docker compose up -d
-
-# Открыть Grafana
-open http://localhost:3000
-
-# Дашборд появится автоматически через 30 секунд
-# Dashboards → Browse → Mood Diary Bot
-```
+### 📈 Метрики
 
 | Метрика | Тип | Описание |
 |---------|-----|----------|
@@ -261,24 +261,27 @@ open http://localhost:3000
 | Компонент | Технология | Зачем |
 |-----------|-----------|--------|
 | **Backend** | Python 3.12+, asyncio | Асинхронность, высокая производительность |
-| **Bot Framework** | aiogram 3.x | Современный async-фреймворк для Telegram |
+| **Telegram** | aiogram 3.x | Современный async-фреймворк для Telegram |
+| **VK** | vkbottle 4.x | Long polling бот для VK сообществ |
+| **Charts** | matplotlib (Agg) | Генерация инфографики настроения |
 | **ORM** | SQLAlchemy 2.0 + asyncpg | Типизированные async-запросы к PostgreSQL |
 | **Config** | Pydantic Settings | Валидация настроек, типизация, .env-поддержка |
 | **Migrations** | Alembic | Управление схемой БД |
-| **DI/Architecture** | Clean Architecture + Repository Pattern | Разделение слоёв, тестируемость |
+| **DI** | dependency-injector | IoC контейнер, разделение слоёв |
+| **Cache** | Redis (aioredis) | Состояния сессий |
+| **Monitoring** | Prometheus + Grafana | Метрики и дашборды |
 | **Containerization** | Docker, Compose | Воспроизводимая среда, лёгкий деплой |
-| **Package Manager** | uv *(или pip)* | Быстрая установка зависимостей |
+| **Package Manager** | uv | Быстрая установка зависимостей |
 
 ---
 
-
 ## Код стайл
 
-```
+```bash
 # Проверка типов
 mypy src/
 
-# Линтинг
+# Линтинг и форматирование
 ruff check src/ && ruff format src/
 ```
 
@@ -295,13 +298,11 @@ ruff check src/ && ruff format src/
 
 ---
 
-
 ## 📄 Лицензия
 
 Распространяется под лицензией MIT. Подробности — в файле [LICENSE](LICENSE).
 
 ---
-
 
 > ⚠️ **Важно**: Этот бот не является медицинским инструментом. Если вы испытываете стойкое ухудшение настроения, тревогу или депрессивные состояния — обратитесь к квалифицированному специалисту.
 
