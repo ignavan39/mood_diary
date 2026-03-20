@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 import logging
 import sys
@@ -17,6 +16,7 @@ from infrastructure.metrics import (
 from presintation.common import BotRunner
 from presintation.common.base_bot import BaseBot
 from presintation.telegram.bot import create_telegram_bot
+from presintation.vk.bot import create_vk_bot
 
 
 logging.basicConfig(
@@ -57,9 +57,9 @@ async def async_main() -> None:
     if tg_bot is not None:
         bots.append(tg_bot)
 
-    # vk_bot = create_vk_bot(container)
-    # if vk_bot is not None:
-    #     bots.append(vk_bot)
+    vk_bot = create_vk_bot(container)
+    if vk_bot is not None:
+        bots.append(vk_bot)
 
     if not bots:
         logger.error(
