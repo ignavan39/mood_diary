@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-sys.path.append(os.path.abspath('src')) 
+sys.path.append(os.path.abspath("src"))
 
 from infrastructure.database.models import BaseModel
 
