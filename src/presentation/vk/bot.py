@@ -8,6 +8,7 @@ from presentation.common.base_bot import BaseBot
 from presentation.vk.endpoints.help.router import register_help_handlers
 
 from infrastructure.ioc.container.application import AppContainer
+from presentation.vk.endpoints.user import register_user_handlers
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class VkBot(BaseBot):
 
     def _register_handlers(self) -> None:
         register_help_handlers(self._vk)
+        register_user_handlers(self._vk, self._api, self._container)
 
     async def start(self) -> None:
         logger.info("🚀 Starting VK Bot (long polling)...")
