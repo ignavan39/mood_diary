@@ -22,6 +22,13 @@ dependencies = [
     "vkbottle>=4.7.0",
 ]
 
+[tool.ruff]
+src = ["src"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+
 [[tool.mypy.overrides]]
 module = [
     "vkbottle.*",
@@ -46,6 +53,11 @@ script_location = "%(here)s/alembic"
 # additional paths to be prepended to sys.path. defaults to the current working directory.
 prepend_sys_path = [
     "."
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.4",
 ]
 
 # timezone to use when rendering the date within the migration file

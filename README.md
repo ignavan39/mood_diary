@@ -177,7 +177,7 @@ mood-diary-bot/
 │   │   ├── ioc/container/             # DI контейнеры (dependency-injector)
 │   │   ├── lifecycle/                 # SignalHandler
 │   │   └── metrics/                   # Prometheus метрики, Health check
-│   └── presintation/                  # Presentation слой
+│   └── presentation/                  # Presentation слой
 │       ├── common/                    # BaseBot, BotRunner, Messages
 │       ├── telegram/                  # Telegram бот (aiogram 3.x)
 │       │   ├── bot.py

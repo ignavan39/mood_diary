@@ -13,10 +13,10 @@ from infrastructure.metrics import (
     start_health_server_thread,
     start_metrics_server_thread,
 )
-from presintation.common import BotRunner
-from presintation.common.base_bot import BaseBot
-from presintation.telegram.bot import create_telegram_bot
-from presintation.vk.bot import create_vk_bot
+from presentation.common import BotRunner
+from presentation.common.base_bot import BaseBot
+from presentation.telegram.bot import create_telegram_bot
+from presentation.vk.bot import create_vk_bot
 
 
 logging.basicConfig(
