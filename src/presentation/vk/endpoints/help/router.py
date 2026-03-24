@@ -4,7 +4,7 @@ from vkbottle import Bot
 from vkbottle.bot import Message
 
 from presentation.common import Messages
-from presentation.vk.endpoints.help.controller import GetHelpController
+from presentation.vk.endpoints.help.controllers import GetHelpController
 
 
 logger = logging.getLogger(__name__)
