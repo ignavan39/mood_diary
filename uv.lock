@@ -1445,6 +1445,11 @@ dependencies = [
     { name = "vkbottle" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "aiogram", specifier = ">=3.26.0" },
@@ -1463,6 +1468,9 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.47" },
     { name = "vkbottle", specifier = ">=4.7.0" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.15.4" }]
 
 [[package]]
 name = "typing-extensions"
