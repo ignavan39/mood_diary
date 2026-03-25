@@ -16,7 +16,7 @@ from infrastructure.metrics import (
 from presentation.common import BotRunner
 from presentation.common.base_bot import BaseBot
 from presentation.telegram.bot import create_telegram_bot
-from presentation.vk.bot import create_vk_bot
+# from presentation.vk.bot import create_vk_bot
 
 
 logging.basicConfig(
@@ -57,9 +57,9 @@ async def async_main() -> None:
     if tg_bot is not None:
         bots.append(tg_bot)
 
-    vk_bot = create_vk_bot(container)
-    if vk_bot is not None:
-        bots.append(vk_bot)
+    # vk_bot = create_vk_bot(container)
+    # if vk_bot is not None:
+    #     bots.append(vk_bot)
 
     if not bots:
         logger.error(
