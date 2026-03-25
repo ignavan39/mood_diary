@@ -24,6 +24,11 @@ def upgrade() -> None:
         sa.Column("platform", sa.String(32), nullable=False, server_default="telegram"),
     )
 
+    op.add_column(
+        "users",
+        sa.Column("full_name", sa.String, nullable=True),
+    )
+
     op.alter_column(
         "users",
         "external_id",

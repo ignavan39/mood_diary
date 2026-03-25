@@ -19,6 +19,7 @@ dependencies = [
     "ruff>=0.15.4",
     "six>=1.17.0",
     "sqlalchemy[asyncio]>=2.0.47",
+    "vk-api>=11.10.0",
 ]
 
 [tool.ruff]
@@ -29,9 +30,7 @@ known-first-party = ["src"]
 
 
 [[tool.mypy.overrides]]
-module = [
-    "vkbottle.*",
-]
+module = ["vkbottle.*", "vk_api.*", "vk_api"]
 ignore_missing_imports = true
 [tool.alembic]
 
@@ -50,14 +49,10 @@ script_location = "%(here)s/alembic"
 # file_template = "%%(year)d/%%(month).2d/%%(day).2d_%%(hour).2d%%(minute).2d_%%(second).2d_%%(rev)s_%%(slug)s"
 
 # additional paths to be prepended to sys.path. defaults to the current working directory.
-prepend_sys_path = [
-    "."
-]
+prepend_sys_path = ["."]
 
 [dependency-groups]
-dev = [
-    "ruff>=0.15.4",
-]
+dev = ["ruff>=0.15.4"]
 
 # timezone to use when rendering the date within the migration file
 # as well as the filename.
@@ -121,4 +116,3 @@ dev = [
 # type = "exec"
 # executable = "ruff"
 # options = "check --fix REVISION_SCRIPT_FILENAME"
-

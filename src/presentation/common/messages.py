@@ -1,4 +1,5 @@
 class Messages:
+    WELCOME_STUB_MESSAGE = "нажми /start чтобы начать"
     WELCOME_TEXT = (
         "👋Привет, {full_name}!\n\n"
         "Я помогу тебе отслеживать настроение.\n"
@@ -107,6 +108,7 @@ class Messages:
     BTN_NO = "❌ Нет, отмена"
     BTN_CANCEL = "❌ Отмена"
     BTN_EXPORT_INFORGRAPHIC = "📊 Экспортировать инфографику"
+    BTN_BACK = "🔙 Назад"
 
     BTN_COMMAND_MAP: dict[str, str] = {
         BTN_MOOD: "mood",
