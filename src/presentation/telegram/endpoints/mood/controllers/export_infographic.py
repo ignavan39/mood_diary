@@ -119,7 +119,7 @@ def format_infographic_caption(stats: InfographicStats, is_empty: bool = False) 
     if is_empty or stats.total_entries == 0:
         return Messages.format(
             Messages.INFOGRAPHIC_EMPTY_CAPTION,
-            period=Messages.get_period_label(stats.period_days),
+            period=Messages.get_period_str_by_day(stats.period_days),
         )
 
     avg = ceil(stats.avg_mood)
@@ -132,7 +132,7 @@ def format_infographic_caption(stats: InfographicStats, is_empty: bool = False) 
     return Messages.format(
         Messages.INFOGRAPHIC_CAPTION,
         emoji=emoji,
-        period=Messages.get_period_label(stats.period_days),
+        period=Messages.get_period_str_by_day(stats.period_days),
         total=stats.total_entries,
         avg=avg,
         mood_text=mood_text,
