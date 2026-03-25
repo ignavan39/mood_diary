@@ -30,6 +30,7 @@ async def get_menu(message: Message) -> None:
 
 
 @router.callback_query(F.data.startswith("mood_"))
+@inject
 async def record_mood(
     callback: CallbackQuery,
     use_case_factory: Factory[RecordMoodUseCase] = Provide[
