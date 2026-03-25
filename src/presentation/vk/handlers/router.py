@@ -3,6 +3,11 @@ from typing import TYPE_CHECKING
 
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.handlers.help import GetHelpMessageHandler
+from presentation.vk.handlers.mood import (
+    GetMoodMenuHandler,
+    RecordMoodHandler,
+    UpdateMoodHandler,
+)
 from presentation.vk.handlers.user import GetPofileMenuHandler, GetProfileHandler
 from presentation.vk.handlers.user.fallback import FallbackHandler
 from presentation.vk.handlers.user.register import RegisterUserHandler
@@ -33,13 +38,17 @@ class VkRouter:
         container: "AppContainer",
         group_id: int,
     ) -> list[VkHandler]:
-        kwargs = {"vk_api": vk_api, "container": container, "group_id": group_id}
         return [
-            GetProfileHandler(**kwargs),
-            RegisterUserHandler(**kwargs),
-            GetHelpMessageHandler(**kwargs),
-            GetPofileMenuHandler(**kwargs),
-            FallbackHandler(**kwargs),
+            GetProfileHandler(vk_api=vk_api, container=container, group_id=group_id),
+            RegisterUserHandler(vk_api=vk_api, container=container, group_id=group_id),
+            GetHelpMessageHandler(
+                vk_api=vk_api, container=container, group_id=group_id
+            ),
+            GetPofileMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
+            GetMoodMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
+            RecordMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
+            UpdateMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
+            FallbackHandler(vk_api=vk_api, container=container, group_id=group_id),
         ]
 
     async def route(self, message: VkMessage) -> bool:
@@ -50,7 +59,7 @@ class VkRouter:
         )
         for handler in self._handlers:
             try:
-                if await handler.handle(message):
+                if await handler.handle_with_metrics(message):
                     logger.debug("Handled by %s", handler.__class__.__name__)
                     return True
             except Exception as e:

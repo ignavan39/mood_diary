@@ -1,4 +1,3 @@
-from presentation.common import Messages
 from presentation.vk.sdk.keyboards import ButtonColor, VkKeyboard
 
 
@@ -27,8 +26,6 @@ def kb_mood_select() -> str:
             color=ButtonColor.NEGATIVE if i <= 2 else ButtonColor.SECONDARY,
             payload={"mood": str(i)},
         )
-    keyboard.row()
+    result = keyboard.to_json()
 
-    keyboard.add_callback(Messages.BTN_CANCEL, color=ButtonColor.NEGATIVE)
-
-    return keyboard.to_json()
+    return result

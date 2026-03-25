@@ -16,7 +16,7 @@ class HealthStatus:
 
 
 class HealthChecker:
-    def __init__(self):
+    def __init__(self) -> None:
         self._status = HealthStatus.STARTING
         self._db_connected = False
         self._polling_active = False
@@ -69,10 +69,9 @@ health_checker = HealthChecker()
 
 
 class HealthHandler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass
+    def log_message(self, format, *args): ...
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         if self.path == "/health":
             self._handle_health()
         elif self.path == "/health/live":
@@ -83,7 +82,7 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def _handle_health(self):
+    def _handle_health(self) -> None:
         status = health_checker.get_status()
         code = 200 if status["status"] == HealthStatus.HEALTHY else 503
         self.send_response(code)
@@ -91,7 +90,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(status, indent=2).encode())
 
-    def _handle_liveness(self):
+    def _handle_liveness(self) -> None:
         status = health_checker.get_status()
         code = 200 if status["liveness"] else 503
         self.send_response(code)
@@ -99,7 +98,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'{"status":"alive"}')
 
-    def _handle_readiness(self):
+    def _handle_readiness(self) -> None:
         status = health_checker.get_status()
         code = 200 if status["readiness"] else 503
         self.send_response(code)
