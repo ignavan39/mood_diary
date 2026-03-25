@@ -1,3 +1,6 @@
+from domain.entities import StatsPeriod
+
+
 class Messages:
     WELCOME_STUB_MESSAGE = "нажми /start чтобы начать"
     WELCOME_TEXT = (
@@ -24,6 +27,8 @@ class Messages:
         "Используй /mood чтобы начать отслеживать настроение!\n\n"
         "<i>Сгенерировано @mood_diary_bbot</i>"
     )
+
+    CHOOSE_PERIOD = "📊 Выбери период:"
 
     INOGRAPHIC_GENERATING = "🎨 Генерирую инфографику..."
 
@@ -119,13 +124,31 @@ class Messages:
         BTN_MAIN_MENU: "start",
     }
 
-    PERIOD_LABELS = {
+    PERIODS_TO_STR_MAP: dict[int, str] = {
         7: "Неделя",
         30: "Месяц",
         90: "3 месяца",
         180: "Полгода",
         365: "Год",
         0: "Все время",
+    }
+
+    PERIODS_TO_LABEL_MAP: dict[str, StatsPeriod] = {
+        "неделя": StatsPeriod.WEEK,
+        "месяц": StatsPeriod.MONTH,
+        "3 месяца": StatsPeriod.QUARTER,
+        "полгода": StatsPeriod.HALF_YEAR,
+        "год": StatsPeriod.YEAR,
+        "все время": StatsPeriod.ALL,
+    }
+
+    LABEL_TO_PERIOD_MAP: dict[StatsPeriod, str] = {
+        StatsPeriod.WEEK: "неделя",
+        StatsPeriod.MONTH: "месяц",
+        StatsPeriod.QUARTER: "3 месяца",
+        StatsPeriod.HALF_YEAR: "полгода",
+        StatsPeriod.YEAR: "год",
+        StatsPeriod.ALL: "все время",
     }
 
     MOOD_TEXTS = {
@@ -168,8 +191,12 @@ class Messages:
         return cls.format(text, **kwargs)
 
     @classmethod
-    def get_period_label(cls, days: int) -> str:
-        return cls.PERIOD_LABELS.get(days, f"{days} дней")
+    def get_period_str_by_day(cls, days: int) -> str:
+        return cls.PERIODS_TO_STR_MAP.get(days, f"{days} дней")
+
+    @classmethod
+    def get_period_label_by_str(cls, identifier: str) -> StatsPeriod:
+        return cls.PERIODS_TO_LABEL_MAP.get(identifier, StatsPeriod.WEEK)
 
     @classmethod
     def get_mood_text(cls, avg_mood: float) -> str:

@@ -49,21 +49,23 @@ class VkLongPolling:
         if event.type != VkEventType.MESSAGE_NEW:
             return None
 
-        if hasattr(event, 'from_me') and event.from_me:
+        if hasattr(event, "from_me") and event.from_me:
             return None
 
-        user_id = getattr(event, 'user_id', None)
-        peer_id = getattr(event, 'peer_id', getattr(event, 'chat_id', None))
-        text = getattr(event, 'text', '') or ''
-        timestamp = getattr(event, 't', 0)
+        user_id = getattr(event, "user_id", None)
+        peer_id = getattr(event, "peer_id", getattr(event, "chat_id", None))
+        text = getattr(event, "text", "") or ""
+        timestamp = getattr(event, "t", 0)
 
         if user_id is None or peer_id is None:
-            logger.debug("Skipping event with missing user_id or peer_id: %s", event.raw)
+            logger.debug(
+                "Skipping event with missing user_id or peer_id: %s", event.raw
+            )
             return None
 
         payload = None
-        if hasattr(event, 'raw') and isinstance(event.raw, dict):
-            payload = event.raw.get('object', {}).get('payload')
+        if hasattr(event, "raw") and isinstance(event.raw, dict):
+            payload = event.raw.get("object", {}).get("payload")
 
         return VkMessage(
             from_user=VkUser(

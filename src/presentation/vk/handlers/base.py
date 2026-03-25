@@ -1,9 +1,9 @@
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, ClassVar
 
 from presentation.vk.sdk.types import VkMessage
-
 
 if TYPE_CHECKING:
     from vk_api import VkApi
@@ -37,25 +37,24 @@ class VkHandler(ABC):
         user_id: int,
         text: str,
         keyboard: str | None = None,
+        attachment: str | None = None,
     ) -> None:
-        import asyncio
-
-        params = {
+        params: dict = {
             "user_id": user_id,
             "message": text,
             "random_id": 0,
         }
-
         if keyboard:
             params["keyboard"] = keyboard
+        if attachment:
+            params["attachment"] = attachment
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             None,
             lambda: self._vk.method("messages.send", params),
         )
-
-        logger.debug("Sent to VK %d: %s", user_id, text[:50])
+        logger.debug("Sent to VK user %d: %s", user_id, text[:50])
 
 
 __all__ = ["VkHandler"]

@@ -24,11 +24,11 @@ class VkBot(BaseBot):
         self._group_id = group_id
         self._token = token
         self._container = container
-        
+
         self._polling: VkLongPolling | None = None
         self._router: VkRouter | None = None
         self._main_loop: asyncio.AbstractEventLoop | None = None
-    
+
     def _create_message_handler(self, router: VkRouter) -> Callable[[VkMessage], bool]:
         def handle_message(message) -> bool:
             if self._main_loop and not self._main_loop.is_closed():
@@ -44,47 +44,48 @@ class VkBot(BaseBot):
             else:
                 logger.warning("Main loop not available, skipping message")
                 return False
-        
+
         return handle_message
-    
+
     async def start(self) -> None:
         logger.info("Starting VK Bot...")
-        
+
         self._main_loop = asyncio.get_running_loop()
-        
+
         import vk_api
+
         vk = vk_api.VkApi(token=self._token)
         self._router = create_vk_router(vk, self._container, self._group_id)
-        
+
         self._polling = VkLongPolling(
             token=self._token,
             group_id=self._group_id,
             on_message=self._create_message_handler(self._router),
         )
-        
+
         def on_polling_error(error: Exception) -> None:
             logger.error("Polling error: %s", error)
-        
+
         self._polling.start(
             main_loop=self._main_loop,
             on_error=on_polling_error,
         )
-        
+
         await asyncio.sleep(0.5)
-        
+
         if self._polling and self._polling.is_running:
             logger.info("VK Bot started (polling active)")
         else:
             logger.error("Failed to start VK Bot polling")
-    
+
     async def stop(self) -> None:
         logger.info("Stopping VK Bot...")
-        
+
         if self._polling:
             self._polling.stop(timeout=30)
-        
+
         logger.info("VK Bot stopped")
-    
+
     @staticmethod
     def get_platform_name() -> str:
         return "vk"
@@ -92,13 +93,13 @@ class VkBot(BaseBot):
 
 def create_vk_bot(container: "AppContainer") -> "VkBot | None":
     from infrastructure.configs.config import settings
-    
+
     if settings.vk_bot is None or not settings.vk_bot.enabled:
         logger.info("VK bot disabled")
         return None
-    
+
     logger.info("VK bot enabled for group_id=%d", settings.vk_bot.group_id)
-    
+
     return VkBot(
         container=container,
         token=settings.vk_bot.token,

@@ -35,8 +35,9 @@ class RegisterUserHandler(VkHandler):
         group_id: int,
     ) -> None:
         super().__init__(vk_api, container, group_id)
-        self._register_use_case: RegisterUserUseCase = container.services.register_user_use_case()
-        
+        self._register_use_case: RegisterUserUseCase = (
+            container.services.register_user_use_case()
+        )
 
     async def handle(self, message: VkMessage) -> bool:
         if not self._matches_command(message.text):
@@ -74,7 +75,9 @@ class RegisterUserHandler(VkHandler):
             return True
 
         except Exception as e:
-            logger.exception("StartHandler error for user %d,%e", message.from_user.id, e)
+            logger.exception(
+                "StartHandler error for user %d,%e", message.from_user.id, e
+            )
             await self._send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,
@@ -94,8 +97,6 @@ class RegisterUserHandler(VkHandler):
 
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, _sync_fetch)
-
-
 
 
 __all__ = ["RegisterUserHandler"]

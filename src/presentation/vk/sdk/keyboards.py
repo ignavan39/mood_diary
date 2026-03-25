@@ -1,9 +1,3 @@
-# src/presentation/vk/sdk/keyboards.py
-"""
-VK Keyboard SDK — чистый builder без бизнес-логики.
-
-Переиспользуемый компонент, не знает про конкретный проект.
-"""
 import json
 from dataclasses import dataclass, field
 from enum import Enum
@@ -31,7 +25,7 @@ class TextButton:
     label: str
     color: ButtonColor = ButtonColor.SECONDARY
     payload: Optional[dict[str, str]] = None
-    
+
     def to_dict(self) -> dict:
         return {
             "action": {
@@ -48,7 +42,7 @@ class CallbackButton:
     label: str
     color: ButtonColor = ButtonColor.SECONDARY
     payload: dict[str, str] = field(default_factory=dict)
-    
+
     def to_dict(self) -> dict:
         return {
             "action": {
@@ -64,7 +58,7 @@ class CallbackButton:
 class UrlButton:
     label: str
     url: str
-    
+
     def to_dict(self) -> dict:
         return {
             "action": {
@@ -79,7 +73,7 @@ class UrlButton:
 class VkKeyboard:
     """
     Builder клавиатур VK.
-    
+
     Example:
         keyboard = (
             VkKeyboard()
@@ -89,21 +83,22 @@ class VkKeyboard:
             .to_json()
         )
     """
+
     one_time: bool = False
     inline: bool = False
     buttons: list[list[dict]] = field(default_factory=list)
     _current_row: list[dict] = field(default_factory=list, repr=False)
-    
+
     def _add_button(self, button_dict: dict) -> "VkKeyboard":
         self._current_row.append(button_dict)
         return self
-    
+
     def _finish_row(self) -> "VkKeyboard":
         if self._current_row:
             self.buttons.append(self._current_row)
             self._current_row = []
         return self
-    
+
     def add_text(
         self,
         label: str,
@@ -112,7 +107,7 @@ class VkKeyboard:
     ) -> "VkKeyboard":
         button = TextButton(label=label, color=color, payload=payload)
         return self._add_button(button.to_dict())
-    
+
     def add_callback(
         self,
         label: str,
@@ -123,14 +118,14 @@ class VkKeyboard:
             raise ValueError("Callback buttons require inline=True")
         button = CallbackButton(label=label, color=color, payload=payload or {})
         return self._add_button(button.to_dict())
-    
+
     def add_url(self, label: str, url: str) -> "VkKeyboard":
         button = UrlButton(label=label, url=url)
         return self._add_button(button.to_dict())
-    
+
     def row(self) -> "VkKeyboard":
         return self._finish_row()
-    
+
     def build(self) -> dict:
         self._finish_row()
         return {
@@ -138,15 +133,15 @@ class VkKeyboard:
             "inline": self.inline,
             "buttons": self.buttons,
         }
-    
+
     def to_json(self, ensure_ascii: bool = False) -> str:
         return json.dumps(self.build(), ensure_ascii=ensure_ascii)
-    
+
     def clear(self) -> "VkKeyboard":
         self.buttons.clear()
         self._current_row.clear()
         return self
-    
+
     @classmethod
     def empty(cls) -> str:
         return json.dumps({"one_time": False, "inline": False, "buttons": []})

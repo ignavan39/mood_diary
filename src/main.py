@@ -17,7 +17,6 @@ from presentation.common import BotRunner
 from presentation.common.base_bot import BaseBot
 from presentation.telegram.bot import create_telegram_bot
 from presentation.vk.bot import create_vk_bot
-# from presentation.vk.bot import create_vk_bot
 
 
 logging.basicConfig(
