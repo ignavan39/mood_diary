@@ -27,14 +27,18 @@ class TextButton:
     payload: Optional[dict[str, str]] = None
 
     def to_dict(self) -> dict:
-        return {
-            "action": {
-                "type": ButtonType.TEXT.value,
-                "label": self.label,
-                "payload": json.dumps(self.payload) if self.payload else None,
-            },
+        action: dict[str, str | dict[str, str]] = {
+            "type": ButtonType.TEXT.value,
+            "label": self.label,
+        }
+        if self.payload:
+            action["payload"] = json.dumps(self.payload)
+
+        result = {
+            "action": action,
             "color": self.color.value,
         }
+        return result
 
 
 @dataclass(frozen=True)
@@ -95,8 +99,8 @@ class VkKeyboard:
 
     def _finish_row(self) -> "VkKeyboard":
         if self._current_row:
-            self.buttons.append(self._current_row)
-            self._current_row = []
+            self.buttons.append(list(self._current_row))
+            self._current_row.clear()
         return self
 
     def add_text(

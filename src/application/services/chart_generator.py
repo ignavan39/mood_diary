@@ -26,8 +26,7 @@ class ChartGeneratorInterface(ABC):
         width: int = 800,
         height: int = 600,
         dpi: int = 80,
-    ) -> BytesIO:
-        pass
+    ) -> BytesIO: ...
 
     @abstractmethod
     async def generate_empty(
@@ -37,9 +36,7 @@ class ChartGeneratorInterface(ABC):
         width: int = 800,
         height: int = 400,
         dpi: int = 100,
-    ) -> BytesIO:
-        pass
+    ) -> BytesIO: ...
 
     @abstractmethod
-    async def shutdown(self) -> None:
-        pass
+    async def shutdown(self) -> None: ...
