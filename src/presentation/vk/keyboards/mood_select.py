@@ -1,31 +1,30 @@
-from presentation.vk.sdk.keyboards import ButtonColor, VkKeyboard
+from presentation.vk.keyboards.main import ButtonColor, VkKeyboard
 
 
 def kb_mood_select() -> str:
-    keyboard = VkKeyboard(inline=True)
+    keyboard = VkKeyboard(inline=False)
 
     for i in range(10, 7, -1):
-        keyboard.add_callback(
-            label=str(i),
+        keyboard.add_text(
+            label=f"😌 {i}",
             color=ButtonColor.POSITIVE,
-            payload={"mood": str(i)},
         )
     keyboard.row()
 
     for i in range(7, 4, -1):
-        keyboard.add_callback(
-            label=str(i),
+        keyboard.add_text(
+            label=f"🙂 {i}",
             color=ButtonColor.PRIMARY,
-            payload={"mood": str(i)},
         )
     keyboard.row()
 
     for i in range(4, 0, -1):
-        keyboard.add_callback(
-            label=str(i),
+        keyboard.add_text(
+            label=f"😔 {i}",
             color=ButtonColor.NEGATIVE if i <= 2 else ButtonColor.SECONDARY,
-            payload={"mood": str(i)},
         )
-    result = keyboard.to_json()
+    keyboard.row()
 
-    return result
+    keyboard.add_text("❌ Отмена", color=ButtonColor.NEGATIVE)
+
+    return keyboard.to_json()

@@ -42,6 +42,7 @@ class VkMessage:
     text: str
     timestamp: int
     payload: Optional[dict[str, Any]] = None
+    event_id: Optional[str] = None
 
     @property
     def is_private(self) -> bool:

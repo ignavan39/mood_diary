@@ -40,13 +40,13 @@ class VkRouter:
     ) -> list[VkHandler]:
         return [
             GetProfileHandler(vk_api=vk_api, container=container, group_id=group_id),
-            RegisterUserHandler(vk_api=vk_api, container=container, group_id=group_id),
             GetHelpMessageHandler(
                 vk_api=vk_api, container=container, group_id=group_id
             ),
             GetPofileMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
             GetMoodMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
             RecordMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
+            RegisterUserHandler(vk_api=vk_api, container=container, group_id=group_id),
             UpdateMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
             FallbackHandler(vk_api=vk_api, container=container, group_id=group_id),
         ]
