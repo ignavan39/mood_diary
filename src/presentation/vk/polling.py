@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 from typing import Callable, Optional
@@ -45,39 +46,73 @@ class VkLongPolling:
 
         self._longpoll = VkLongPoll(self._vk, self._group_id)
 
+    @staticmethod
+    def _get_event_object(event) -> dict:
+        raw = getattr(event, "raw", None)
+        if isinstance(raw, dict):
+            return raw.get("object", {})
+        return {}
+
     def _adapt_message(self, event) -> Optional[VkMessage]:
-        if event.type != VkEventType.MESSAGE_NEW:
-            return None
+        MESSAGE_EVENT_TYPE = getattr(VkEventType, "MESSAGE_EVENT", 50)
 
-        if hasattr(event, "from_me") and event.from_me:
-            return None
+        if event.type == VkEventType.MESSAGE_NEW or event.type == MESSAGE_EVENT_TYPE:
+            if getattr(event, "from_me", False):
+                return None
 
-        user_id = getattr(event, "user_id", None)
-        peer_id = getattr(event, "peer_id", getattr(event, "chat_id", None))
-        text = getattr(event, "text", "") or ""
-        timestamp = getattr(event, "t", 0)
+            obj = self._get_event_object(event)
 
-        if user_id is None or peer_id is None:
-            logger.debug(
-                "Skipping event with missing user_id or peer_id: %s", event.raw
+            payload = None
+
+            payload_raw = obj.get("payload")
+
+            if (
+                not payload_raw
+                and hasattr(event, "raw")
+                and isinstance(event.raw, list)
+                and len(event.raw) > 6
+            ):
+                extra_data = event.raw[6] if len(event.raw) > 6 else {}
+                if isinstance(extra_data, dict):
+                    payload_raw = extra_data.get("payload")
+
+            if isinstance(payload_raw, str):
+                try:
+                    payload = json.loads(payload_raw)
+                except json.JSONDecodeError:
+                    logger.warning("Failed to parse payload: %s", payload_raw)
+            elif isinstance(payload_raw, dict):
+                payload = payload_raw
+
+            if payload:
+                user_id = getattr(event, "user_id", obj.get("user_id"))
+                if not user_id:
+                    return None
+
+                logger.debug("Callback detected: payload=%s", payload)
+
+                return VkMessage(
+                    from_user=VkUser(id=user_id, first_name="", last_name=""),
+                    peer_id=user_id,
+                    text="",
+                    timestamp=getattr(event, "ts", 0),
+                    payload=payload,
+                    event_id=obj.get("event_id"),
+                )
+
+            return VkMessage(
+                from_user=VkUser(
+                    id=getattr(event, "user_id", 0),
+                    first_name="",
+                    last_name="",
+                ),
+                peer_id=getattr(event, "peer_id", getattr(event, "chat_id", 0)),
+                text=getattr(event, "text", "") or "",
+                timestamp=getattr(event, "ts", 0),
+                payload=None,
             )
-            return None
 
-        payload = None
-        if hasattr(event, "raw") and isinstance(event.raw, dict):
-            payload = event.raw.get("object", {}).get("payload")
-
-        return VkMessage(
-            from_user=VkUser(
-                id=user_id,
-                first_name="",
-                last_name="",
-            ),
-            peer_id=peer_id,
-            text=text,
-            timestamp=timestamp,
-            payload=payload,
-        )
+        return None
 
     def _polling_loop(self) -> None:
         logger.info("Starting Long Polling loop")
@@ -93,14 +128,16 @@ class VkLongPolling:
                 if self._stop_event.is_set():
                     logger.info("Stop signal received, exiting polling")
                     break
+
                 message = self._adapt_message(event)
                 if message is None:
                     continue
 
                 logger.debug(
-                    "Received message from %d: %s",
+                    "Received message from user_id=%d text='%s' payload=%s",
                     message.from_user.id,
                     message.text[:50],
+                    message.payload,
                 )
 
                 self._on_message(message)
