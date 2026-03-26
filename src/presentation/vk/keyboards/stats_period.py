@@ -5,33 +5,25 @@ from presentation.vk.sdk.keyboards import ButtonColor, VkKeyboard
 
 def kb_stats_period() -> str:
     return (
-        VkKeyboard(inline=True)
-        .add_callback(
-            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.WEEK],
-            color=ButtonColor.PRIMARY,
-            payload={"period": "7"},
+        VkKeyboard(inline=False)
+        .add_text(
+            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.WEEK], color=ButtonColor.PRIMARY
         )
-        .add_callback(
-            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.MONTH],
-            color=ButtonColor.PRIMARY,
-            payload={"period": "30"},
+        .add_text(
+            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.MONTH], color=ButtonColor.PRIMARY
         )
         .row()
-        .add_callback(
+        .add_text(
             Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.QUARTER],
             color=ButtonColor.SECONDARY,
-            payload={"period": "90"},
         )
-        .add_callback(
-            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.YEAR],
-            color=ButtonColor.SECONDARY,
-            payload={"period": "365"},
+        .add_text(
+            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.YEAR], color=ButtonColor.SECONDARY
+        )
+        .add_text(
+            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.ALL], color=ButtonColor.SECONDARY
         )
         .row()
-        .add_callback(
-            Messages.LABEL_TO_PERIOD_MAP[StatsPeriod.ALL],
-            color=ButtonColor.SECONDARY,
-            payload={"period": "0"},
-        )
+        .add_text("🔙 Назад", color=ButtonColor.NEGATIVE)
         .to_json()
     )

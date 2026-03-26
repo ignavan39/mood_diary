@@ -17,7 +17,6 @@ class GetMoodMenuHandler(VkHandler):
 
     async def handle(self, message: VkMessage) -> bool:
         if not self._matches_command(message.text):
-
             return False
 
         await self._send_message(

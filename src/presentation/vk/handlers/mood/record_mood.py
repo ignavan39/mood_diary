@@ -1,18 +1,18 @@
 import logging
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 
 from application.use_cases import RecordMoodUseCase
 from application.use_cases.record_mood import RecordMoodRequest
 from domain.exceptions import UserNotFoundError
-from infrastructure import AppContainer
 from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
-from vk_api import VkApi
-
 from presentation.vk.keyboards import kb_confirm, kb_main
 from presentation.vk.sdk.types import VkMessage
 
+if TYPE_CHECKING:
+    from vk_api import VkApi
+    from infrastructure import AppContainer
 
 PLATFORM = "vk"
 logger = logging.getLogger(__name__)
@@ -22,9 +22,13 @@ class RecordMoodHandler(VkHandler):
     COMMANDS: ClassVar[tuple[str, ...]] = ()
 
     def __init__(
-        self, vk_api: "VkApi", container: "AppContainer", group_id: int
+        self,
+        vk_api: "VkApi",
+        container: "AppContainer",
+        group_id: int,
     ) -> None:
         super().__init__(vk_api, container, group_id)
+        self._container = container
         self._use_case: RecordMoodUseCase = container.services.record_mood_use_case()
 
     def _matches_payload(self, message: VkMessage) -> bool:
@@ -34,10 +38,19 @@ class RecordMoodHandler(VkHandler):
 
     def _matches_text(self, message: VkMessage) -> bool:
         text = message.text.strip()
-        if not text.isdigit():
-            return False
-        value = int(text)
-        return 0 <= value <= 10
+
+        if len(text) >= 3 and text[-1].isdigit():
+            try:
+                value = int(text[-1])
+                return 0 <= value <= 10
+            except ValueError:
+                pass
+
+        if text.isdigit():
+            value = int(text)
+            return 0 <= value <= 10
+
+        return False
 
     async def handle(self, message: VkMessage) -> bool:
         logger.debug(
@@ -47,7 +60,10 @@ class RecordMoodHandler(VkHandler):
             message.event_id,
         )
 
-        if not (self._matches_payload(message) or self._matches_text(message)):
+        if self._matches_text(message):
+            text = message.text.strip()
+            rating = int(text[-1]) if text[-1].isdigit() else int(text)
+        else:
             return False
 
         logger.info("VK mood selection from user %d", message.from_user.id)
@@ -55,12 +71,6 @@ class RecordMoodHandler(VkHandler):
         event_id = message.event_id
 
         try:
-            rating = (
-                int(message.payload["mood"])
-                if message.payload and "mood" in message.payload
-                else int(message.text.strip())
-            )
-
             response = await self._use_case.execute(
                 RecordMoodRequest(
                     external_user_id=str(message.from_user.id),
@@ -100,7 +110,7 @@ class RecordMoodHandler(VkHandler):
                 )
 
             if event_id:
-                await self.answer_callback_event(
+                await self._answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,
@@ -110,7 +120,7 @@ class RecordMoodHandler(VkHandler):
 
         except UserNotFoundError:
             if event_id:
-                await self.answer_callback_event(
+                await self._answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,
@@ -125,7 +135,7 @@ class RecordMoodHandler(VkHandler):
         except Exception as e:
             logger.exception("RecordMoodHandler error: %s", e)
             if event_id:
-                await self.answer_callback_event(
+                await self._answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,

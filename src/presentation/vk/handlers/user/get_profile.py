@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from vk_api import VkApi
 
 logger = logging.getLogger(__name__)
-
 PLATFORM = "vk"
 
 
@@ -47,27 +46,39 @@ class GetProfileHandler(VkHandler):
     COMMANDS: ClassVar[tuple[str, ...]] = ()
 
     def __init__(
-        self, vk_api: "VkApi", container: "AppContainer", group_id: int
+        self,
+        vk_api: "VkApi",
+        container: "AppContainer",
+        group_id: int,
     ) -> None:
         super().__init__(vk_api, container, group_id)
         self._use_case: GetUserStatsUseCase = (
             container.services.get_user_stats_use_case()
         )
 
-    def matches(self, message: VkMessage) -> bool:
+    def _matches_period(self, message: VkMessage) -> bool:
         if message.payload and "period" in message.payload:
             return True
-        return message.text.strip().lower() in Messages.PERIODS_TO_LABEL_MAP
+
+        period = Messages.get_period_label_by_str(message.text.strip())
+        return period is not None
 
     async def handle(self, message: VkMessage) -> bool:
-        if not self.matches(message):
+        if not self._matches_period(message):
             return False
+
+        logger.info(
+            "VK period selected by user %d: '%s'", message.from_user.id, message.text
+        )
 
         try:
             if message.payload and "period" in message.payload:
                 period = StatsPeriod(int(message.payload["period"]))
             else:
-                period = Messages.get_period_label_by_str(message.text.strip().lower())
+                period = Messages.get_period_label_by_str(message.text.strip())
+                if period is None:
+                    logger.warning("Unknown period label: %s", message.text)
+                    return False
 
             response = await self._use_case.execute(
                 GetUserStatsRequest(
@@ -91,6 +102,7 @@ class GetProfileHandler(VkHandler):
 
             s = response.stats
             period_label = Messages.get_period_str_by_day(period.value)
+
             text = (
                 Messages.format(Messages.STATS_TITLE, period=period_label)
                 + "\n\n"
@@ -106,11 +118,13 @@ class GetProfileHandler(VkHandler):
                     last=s.last_entry_date or "—",
                 )
             )
+
             await self._send_message(
                 user_id=message.from_user.id,
                 text=text,
                 keyboard=kb_main(),
             )
+
             return True
 
         except UserNotFoundError:
@@ -120,8 +134,9 @@ class GetProfileHandler(VkHandler):
                 keyboard=kb_main(),
             )
             return True
+
         except Exception as e:
-            logger.exception("StatsHandler error: %s", e)
+            logger.exception("GetProfileHandler error: %s", e)
             await self._send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,

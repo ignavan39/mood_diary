@@ -92,7 +92,6 @@ class Messages:
     )
 
     STATS_DETAILS = (
-        "📊 Статистика\n\n"
         "{emoji} Среднее настроение: {avg}/10 ({mood_text})\n\n"
         "📈 Детали:\n"
         "• Записей: {total}\n"
@@ -195,8 +194,8 @@ class Messages:
         return cls.PERIODS_TO_STR_MAP.get(days, f"{days} дней")
 
     @classmethod
-    def get_period_label_by_str(cls, identifier: str) -> StatsPeriod:
-        return cls.PERIODS_TO_LABEL_MAP.get(identifier, StatsPeriod.WEEK)
+    def get_period_label_by_str(cls, identifier: str) -> StatsPeriod | None:
+        return cls.PERIODS_TO_LABEL_MAP.get(identifier)
 
     @classmethod
     def get_mood_text(cls, avg_mood: float) -> str:
