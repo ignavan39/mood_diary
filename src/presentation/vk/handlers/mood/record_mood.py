@@ -1,6 +1,6 @@
-from datetime import datetime
 import logging
 from typing import ClassVar
+from datetime import datetime
 
 from application.use_cases import RecordMoodUseCase
 from application.use_cases.record_mood import RecordMoodRequest
@@ -10,13 +10,11 @@ from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
 from vk_api import VkApi
 
-from presentation.vk.keyboards import kb_confirm
-from presentation.vk.keyboards.main import kb_main
+from presentation.vk.keyboards import kb_confirm, kb_main
 from presentation.vk.sdk.types import VkMessage
 
+
 PLATFORM = "vk"
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,20 +41,25 @@ class RecordMoodHandler(VkHandler):
 
     async def handle(self, message: VkMessage) -> bool:
         logger.debug(
-            "RecordMoodHandler checking: text='%s', payload=%s",
+            "RecordMoodHandler checking: text='%s', payload=%s, event_id=%s",
             message.text,
             message.payload,
+            message.event_id,
         )
 
         if not (self._matches_payload(message) or self._matches_text(message)):
             return False
+
         logger.info("VK mood selection from user %d", message.from_user.id)
 
+        event_id = message.event_id
+
         try:
-            if message.payload and "mood" in message.payload:
-                rating = int(message.payload["mood"])
-            else:
-                rating = int(message.text.strip())
+            rating = (
+                int(message.payload["mood"])
+                if message.payload and "mood" in message.payload
+                else int(message.text.strip())
+            )
 
             response = await self._use_case.execute(
                 RecordMoodRequest(
@@ -95,17 +98,38 @@ class RecordMoodHandler(VkHandler):
                     text=Messages.format(Messages.MOOD_SAVED, mood=rating, emoji=emoji),
                     keyboard=kb_main(),
                 )
+
+            if event_id:
+                await self.answer_callback_event(
+                    event_id=event_id,
+                    user_id=message.from_user.id,
+                    action=None,
+                )
+
             return True
 
         except UserNotFoundError:
+            if event_id:
+                await self.answer_callback_event(
+                    event_id=event_id,
+                    user_id=message.from_user.id,
+                    action=None,
+                )
             await self._send_message(
                 user_id=message.from_user.id,
                 text=Messages.WELCOME_STUB_MESSAGE,
                 keyboard=kb_main(),
             )
             return True
+
         except Exception as e:
             logger.exception("RecordMoodHandler error: %s", e)
+            if event_id:
+                await self.answer_callback_event(
+                    event_id=event_id,
+                    user_id=message.from_user.id,
+                    action=None,
+                )
             await self._send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,

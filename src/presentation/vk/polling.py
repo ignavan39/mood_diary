@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 from typing import Callable, Optional
@@ -46,38 +47,52 @@ class VkLongPolling:
         self._longpoll = VkLongPoll(self._vk, self._group_id)
 
     def _adapt_message(self, event) -> Optional[VkMessage]:
-        if event.type != VkEventType.MESSAGE_NEW:
-            return None
 
-        if hasattr(event, "from_me") and event.from_me:
-            return None
+        if event.type == VkEventType.MESSAGE_NEW:
+            if getattr(event, "from_me", False):
+                return None
 
-        user_id = getattr(event, "user_id", None)
-        peer_id = getattr(event, "peer_id", getattr(event, "chat_id", None))
-        text = getattr(event, "text", "") or ""
-        timestamp = getattr(event, "t", 0)
-
-        if user_id is None or peer_id is None:
-            logger.debug(
-                "Skipping event with missing user_id or peer_id: %s", event.raw
+            return VkMessage(
+                from_user=VkUser(id=event.user_id, first_name="", last_name=""),
+                peer_id=event.peer_id,
+                text=event.text or "",
+                timestamp=event.t,
+                payload=event.raw.get("object", {}).get("payload"),
             )
-            return None
 
-        payload = None
-        if hasattr(event, "raw") and isinstance(event.raw, dict):
-            payload = event.raw.get("object", {}).get("payload")
+        elif event.type == 50:
+          obj = event.raw.get('object', {})
 
-        return VkMessage(
-            from_user=VkUser(
-                id=user_id,
-                first_name="",
-                last_name="",
-            ),
-            peer_id=peer_id,
-            text=text,
-            timestamp=timestamp,
-            payload=payload,
-        )
+          payload = None
+          payload_raw = obj.get('payload')
+          if isinstance(payload_raw, str):
+              try:
+                  payload = json.loads(payload_raw)
+              except json.JSONDecodeError:
+                  logger.warning("Failed to parse callback payload: %s", payload_raw)
+
+          user_id = obj.get('user_id')
+          if not user_id:
+              event_id_raw = obj.get('event_id', '')
+              if '-' in event_id_raw:
+                  try:
+                      user_id = int(event_id_raw.split('-')[0])
+                  except (ValueError, IndexError):
+                      pass
+                    
+          if not user_id:
+              logger.warning("MESSAGE_EVENT without user_id: %s", event.raw)
+              return None
+
+          return VkMessage(
+              from_user=VkUser(id=user_id, first_name="", last_name=""),
+              peer_id=user_id,
+              text="",
+              timestamp=event.t,
+              payload=payload,
+              event_id=obj.get('event_id'),
+          )
+        return None
 
     def _polling_loop(self) -> None:
         logger.info("Starting Long Polling loop")
