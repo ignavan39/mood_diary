@@ -9,8 +9,8 @@ def kb_confirm(
     cancel_payload: dict[str, str] | None = None,
 ) -> str:
     return (
-        VkKeyboard(inline=True)
-        .add_callback(confirm_text, color=ButtonColor.POSITIVE, payload=confirm_payload)
-        .add_callback(cancel_text, color=ButtonColor.NEGATIVE, payload=cancel_payload)
+        VkKeyboard(inline=False)
+        .add_text(confirm_text, color=ButtonColor.POSITIVE, payload=confirm_payload)
+        .add_text(cancel_text, color=ButtonColor.NEGATIVE, payload=cancel_payload)
         .to_json()
     )
