@@ -31,7 +31,7 @@ class GetPofileMenuHandler(VkHandler):
     )
 
     async def handle(self, message: VkMessage) -> bool:
-        if not self._matches_command(message.text):
+        if not self._matches_command(message.text.lower()):
             return False
 
         await self._send_message(
