@@ -18,7 +18,7 @@ class GetHelpMessageHandler(VkHandler):
     )
 
     async def handle(self, message: VkMessage) -> bool:
-        if not self._matches_command(message.text):
+        if not self._matches_command(message.text.lower()):
             return False
 
         text = Messages.HELP_TEXT

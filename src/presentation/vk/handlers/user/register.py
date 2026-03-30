@@ -19,6 +19,7 @@ class RegisterUserHandler(VkHandler):
     COMMANDS: ClassVar[tuple[str, ...]] = (
         "/start",
         "начало",
+        "начать",
         "старт",
         "привет",
         "start",
@@ -40,7 +41,7 @@ class RegisterUserHandler(VkHandler):
         )
 
     async def handle(self, message: VkMessage) -> bool:
-        if not self._matches_command(message.text):
+        if not self._matches_command(message.text.lower()):
             return False
 
         logger.info("VK /start from user %d", message.from_user.id)
