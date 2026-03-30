@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.handlers.help import GetHelpMessageHandler
 from presentation.vk.handlers.mood import (
+    ExportInfographicHandler,
     GetMoodMenuHandler,
     RecordMoodHandler,
     UpdateMoodHandler,
@@ -48,6 +49,9 @@ class VkRouter:
             RecordMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
             RegisterUserHandler(vk_api=vk_api, container=container, group_id=group_id),
             UpdateMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
+            ExportInfographicHandler(
+                vk_api=vk_api, container=container, group_id=group_id
+            ),
             FallbackHandler(vk_api=vk_api, container=container, group_id=group_id),
         ]
 

@@ -47,7 +47,6 @@ class RecordMoodController:
 
             if response.needs_confirmation is True and response.exist_diary is not None:
                 exist_diary = response.exist_diary
-
                 text = Messages.format(
                     Messages.MOOD_DUPLICATE,
                     today=today.strftime("%d.%m"),

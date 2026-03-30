@@ -27,15 +27,22 @@ class UpdateMoodHandler(VkHandler):
         self._use_case: UpdateMoodUseCase = container.services.update_mood_use_case()
 
     def matches(self, message: VkMessage) -> bool:
-        return (
-            message.payload is not None
-            and message.payload.get("action") == "update_mood"
+        return message.payload is not None and (
+            message.payload.get("action") == "update_mood_yes"
+            or message.payload.get("action") == "update_mood_no"
         )
 
     async def handle(self, message: VkMessage) -> bool:
         if not self.matches(message) or message.payload is None:
             return False
 
+        if message.payload.get("action") == "update_mood_no":
+            await self._send_message(
+                user_id=message.from_user.id,
+                text=Messages.WELCOME_STUB_MESSAGE,
+                keyboard=kb_main(),
+            )
+            return True
         try:
             diary_id = int(message.payload["diary_id"])
             new_rating = int(message.payload["rating"])

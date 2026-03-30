@@ -60,7 +60,7 @@ class GenerateMoodInfographicUseCase:
                     avg_mood=0,
                     min_mood=0,
                     max_mood=0,
-                    trend="stable",
+                    trend=Trend("stable"),
                     period_days=request.days,
                 ),
                 is_empty=True,
@@ -141,16 +141,30 @@ class GenerateMoodInfographicUseCase:
 
         return chart_data, stats
 
-    def _calculate_trend(self, values: List[int]) -> Trend:
+    def _calculate_trend(self, values: list[int]) -> Trend:
         if len(values) < 2:
-            return "stable"
+            return Trend("stable")
+
+        volatility = max(values) - min(values)
         mid = len(values) // 2
         first_half_avg = sum(values[:mid]) / mid
         second_half_avg = sum(values[mid:]) / (len(values) - mid)
         diff = second_half_avg - first_half_avg
+
+        is_unstable = volatility > 3
+
         if diff > 1:
-            return "improving"
+            direction = "improving"
         elif diff < -1:
-            return "declining"
+            direction = "declining"
         else:
-            return "stable"
+            direction = "stable"
+
+        if is_unstable:
+            if direction == "improving":
+                return Trend("unstable_improving")
+            elif direction == "declining":
+                return Trend("unstable_declining")
+            return Trend("unstable")
+        else:
+            return Trend(direction)

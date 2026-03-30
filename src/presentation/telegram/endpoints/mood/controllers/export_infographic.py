@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from math import ceil
 
 from aiogram import Bot
 from aiogram.enums import ChatAction
@@ -122,11 +121,10 @@ def format_infographic_caption(stats: InfographicStats, is_empty: bool = False) 
             period=Messages.get_period_str_by_day(stats.period_days),
         )
 
-    avg = ceil(stats.avg_mood)
+    avg = round(stats.avg_mood, 1)
     emoji = Messages.get_mood_emoji(avg)
     mood_text = Messages.get_mood_text(avg)
 
-    trend_emoji = Messages.TREND_EMOJIS.get(stats.trend, "➡️")
     trend_text = Messages.TREND_TEXTS.get(stats.trend, "Стабильно")
 
     return Messages.format(
@@ -138,6 +136,5 @@ def format_infographic_caption(stats: InfographicStats, is_empty: bool = False) 
         mood_text=mood_text,
         min=stats.min_mood,
         max=stats.max_mood,
-        trend_emoji=trend_emoji,
         trend_text=trend_text,
     )
