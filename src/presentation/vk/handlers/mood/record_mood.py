@@ -83,25 +83,35 @@ class RecordMoodHandler(VkHandler):
 
             if response.needs_confirmation and response.exist_diary:
                 ed = response.exist_diary
-                await self._send_message(
-                    user_id=message.from_user.id,
-                    text=Messages.format(
-                        Messages.MOOD_DUPLICATE,
-                        today=datetime.now().strftime("%d.%m"),
-                        old_rating=ed.old_rating,
-                        new_rating=rating,
-                        emoji=emoji,
-                        mood=rating,
-                    ),
-                    keyboard=kb_confirm(
-                        confirm_payload={
-                            "action": "update_mood",
-                            "diary_id": str(ed.existing_diary_id),
-                            "rating": str(rating),
-                        },
-                        cancel_payload={"action": "cancel"},
-                    ),
-                )
+                if ed.old_rating == rating:
+                    text = Messages.format(
+                        Messages.MOOD_UPDATE_EQUAL, rating=rating, emoji=emoji
+                    )
+                    await self._send_message(
+                        user_id=message.from_user.id,
+                        text=text,
+                        keyboard=kb_main(),
+                    )
+                else:
+                    await self._send_message(
+                        user_id=message.from_user.id,
+                        text=Messages.format(
+                            Messages.MOOD_DUPLICATE,
+                            today=datetime.now().strftime("%d.%m"),
+                            old_rating=ed.old_rating,
+                            new_rating=rating,
+                            emoji=emoji,
+                            mood=rating,
+                        ),
+                        keyboard=kb_confirm(
+                            confirm_payload={
+                                "action": "update_mood_yes",
+                                "diary_id": str(ed.existing_diary_id),
+                                "rating": str(rating),
+                            },
+                            cancel_payload={"action": "update_mood_no"},
+                        ),
+                    )
             else:
                 await self._send_message(
                     user_id=message.from_user.id,

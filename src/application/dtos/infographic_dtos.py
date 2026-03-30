@@ -3,13 +3,23 @@ from datetime import date
 from typing import Literal
 from io import BytesIO
 
+from sqlalchemy import Enum
+
 from domain.entities.user import Platform
 
 
 InfographicFormat = Literal["png", "jpg", "webp"]
 ChartType = Literal["line", "bar", "calendar"]
 ChartTheme = Literal["light", "dark"]
-Trend = Literal["improving", "declining", "stable"]
+
+
+class Trend(str, Enum):
+    STABLE = "stable"
+    UNSTABLE = "unstable"
+    IMPROVING = "improving"
+    DECLINING = "declining"
+    UNSTABLE_IMPROVING = "unstable_improving"
+    UNSTABLE_DECLINING = "unstable_declining"
 
 
 @dataclass

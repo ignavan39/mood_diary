@@ -23,6 +23,7 @@ class VkHandler(ABC):
         group_id: int,
     ) -> None:
         self._vk = vk_api
+        self._group_id = group_id
 
     @abstractmethod
     async def handle(self, message: VkMessage) -> bool: ...

@@ -21,6 +21,7 @@ class SQLAchemyDiaryRepository(DiaryRepository):
 
     async def save(self, diary: SaveDiaryDTO) -> Diary | None:
         async with self.async_session_maker.get_session() as session:
+            existing = await self.get_by_user_and_date(diary.user_id, diary.date)
             diaryModel = DiaryModel(
                 user_id=diary.user_id, rating=diary.rating, date=diary.date
             )
@@ -30,10 +31,6 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                 return self._model_to_entity(diaryModel)
             except IntegrityError as e:
                 if is_duplication_error(e):
-                    existing = await self.get_by_user_and_date(
-                        diary.user_id, diary.date
-                    )
-
                     if existing is None:
                         raise DiaryNotFoundError()
 
@@ -41,7 +38,7 @@ class SQLAchemyDiaryRepository(DiaryRepository):
                         diary_id=existing.id,
                         user_id=diary.user_id,
                         date=diary.date,
-                        rating=diary.rating,
+                        rating=existing.rating,
                     )
                 raise
             except Exception:

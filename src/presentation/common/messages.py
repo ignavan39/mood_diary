@@ -13,19 +13,19 @@ class Messages:
     )
 
     INFOGRAPHIC_CAPTION = (
-        "{emoji} <b>Твоё настроение за {period}</b>\n\n"
-        "📈 <b>Статистика:</b>\n"
+        "{emoji} Твоё настроение за {period}\n\n"
+        "📈 Статистика:\n"
         "• Записей: {total}\n"
         "• Среднее: {avg:.1f}/10 ({mood_text})\n"
         "• Мин/Макс: {min}/{max}\n"
-        "• Тренд: {trend_emoji} {trend_text}\n\n"
-        "<i>Сгенерировано @mood_diary_bbot</i>"
+        "• Тренд: {trend_text}\n\n"
+        "Сгенерировано @mood_diary_bbot"
     )
 
     INFOGRAPHIC_EMPTY_CAPTION = (
-        "📊 <b>Нет данных за {period}</b>\n\n"
+        "📊 Нет данных за {period}\n\n"
         "Используй /mood чтобы начать отслеживать настроение!\n\n"
-        "<i>Сгенерировано @mood_diary_bbot</i>"
+        "Сгенерировано @mood_diary_bbot"
     )
 
     CHOOSE_PERIOD = "📊 Выбери период:"
@@ -36,12 +36,9 @@ class Messages:
         "improving": "Улучшается",
         "declining": "Ухудшается",
         "stable": "Стабильно",
-    }
-
-    TREND_EMOJIS = {
-        "improving": "📈",
-        "declining": "📉",
-        "stable": "➡️",
+        "unstable": "нестабильно",
+        "unstable_improving": "нестабильно, ухудшается",
+        "unstable_declining": "нестабильно, но улучшается",
     }
 
     HELP_TEXT = (
@@ -211,7 +208,7 @@ class Messages:
             return cls.MOOD_TEXTS["excellent"]
 
     @staticmethod
-    def get_mood_emoji(value: int) -> str:
+    def get_mood_emoji(value: float) -> str:
         if value <= 2:
             return "😢"
         elif value <= 4:
