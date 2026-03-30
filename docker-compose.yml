@@ -9,7 +9,7 @@ volumes:
 services:
   postgres:
     container_name: mood_diary_db
-    image: postgres:11.13-alpine
+    image: postgres:11.22-alpine
     environment:
       POSTGRES_DB: ${PG__NAME:-mood_diary}
       POSTGRES_USER: ${PG__USER:-user}
