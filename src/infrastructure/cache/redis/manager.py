@@ -3,10 +3,12 @@ import logging
 from typing import Any, Optional
 from redis.asyncio import Redis as AsyncRedis, ConnectionPool
 
+from infrastructure.cache.cache import Cache
+
 logger = logging.getLogger(__name__)
 
 
-class RedisManager:
+class RedisManager(Cache):
     def __init__(
         self,
         host: str,
@@ -71,11 +73,12 @@ class RedisManager:
 
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         redis = await self.get_connection()
-        return await redis.set(key, str(value), ex=ttl)
+        return await redis.set(key, json.dumps(value), ex=ttl)
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> Optional[dict] | None:
         redis = await self.get_connection()
-        return await redis.get(key)
+        value = await redis.get(key)
+        return json.loads(value) if value else None
 
     async def delete(self, key: str) -> int:
         redis = await self.get_connection()
@@ -84,12 +87,3 @@ class RedisManager:
     async def exists(self, key: str) -> bool:
         redis = await self.get_connection()
         return await redis.exists(key) == 1
-
-    async def get_json(self, key: str) -> Optional[dict]:
-        redis = await self.get_connection()
-        value = await redis.get(key)
-        return json.loads(value) if value else None
-
-    async def set_json(self, key: str, value: dict, ttl: Optional[int] = None) -> bool:
-        redis = await self.get_connection()
-        return await redis.set(key, json.dumps(value), ex=ttl)

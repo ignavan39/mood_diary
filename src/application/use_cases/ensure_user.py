@@ -4,12 +4,12 @@ from typing import Optional
 from domain.dtos import SaveUserDTO
 from domain.entities import User
 from domain.entities.user import Platform
-from domain.exceptions import DuplicateUserError
+from domain.exceptions import DuplicateUserError, UserNotFoundError
 from domain.repositories.user_repository import UserRepository
 
 
 @dataclass
-class RegisterUserRequest:
+class EnsureUserRequest:
     platform: Platform
     external_user_id: str
     full_name: Optional[str] = None
@@ -17,17 +17,17 @@ class RegisterUserRequest:
 
 
 @dataclass
-class GetUserResponse:
+class EnsureUserResponse:
     success: bool
-    user: Optional[User] = None
+    user: User
     is_existing: bool = False
 
 
-class RegisterUserUseCase:
-    def __init__(self, user_repo: UserRepository):
+class EnsureUserUseCase:
+    def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo = user_repo
 
-    async def execute(self, reg: RegisterUserRequest):
+    async def execute(self, reg: EnsureUserRequest) -> EnsureUserResponse:
         try:
             user = await self._user_repo.save(
                 SaveUserDTO(
@@ -37,8 +37,14 @@ class RegisterUserUseCase:
                     username=reg.username,
                 )
             )
-            return GetUserResponse(success=True, is_existing=False, user=user)
+            return EnsureUserResponse(success=True, is_existing=False, user=user)
         except DuplicateUserError:
-            return GetUserResponse(success=True, is_existing=True)
+            user_exist = await self._user_repo.get_by_external_id(
+                external_id=reg.external_user_id, platfrom=reg.platform
+            )
+            if user_exist is None:
+                raise UserNotFoundError(external_user_id=str(reg.external_user_id))
+
+            return EnsureUserResponse(success=True, is_existing=True, user=user_exist)
         except Exception:
             raise

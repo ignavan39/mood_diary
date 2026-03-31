@@ -4,6 +4,7 @@ from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.keyboards.main import kb_main
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 class FallbackHandler(VkHandler):
     COMMANDS: ClassVar[tuple[str, ...]] = ()
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not message.text.strip():
             return False
 
@@ -21,9 +22,9 @@ class FallbackHandler(VkHandler):
             message.text[:50],
         )
 
-        await self._send_message(
+        await self._api.send_message(
             user_id=message.from_user.id,
-            text=Messages.WELCOME_STUB_MESSAGE,
+            text=Messages.STUB_MESSAGE,
             keyboard=kb_main(),
         )
 
