@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Callable
 from presentation.common.base_bot import BaseBot
 from presentation.vk.handlers.router import VkRouter, create_vk_router
 from presentation.vk.polling import VkLongPolling
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
 
 if TYPE_CHECKING:
@@ -55,7 +56,8 @@ class VkBot(BaseBot):
         import vk_api
 
         vk = vk_api.VkApi(token=self._token)
-        self._router = create_vk_router(vk, self._container, self._group_id)
+        vk_sdk = VkSdk(vk)
+        self._router = create_vk_router(vk_sdk, self._container, self._group_id)
 
         self._polling = VkLongPolling(
             token=self._token,

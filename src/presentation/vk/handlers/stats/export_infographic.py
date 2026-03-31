@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from io import BytesIO
 from typing import TYPE_CHECKING, ClassVar
 
 from application.dtos import GenerateInfographicRequest
@@ -12,10 +11,11 @@ from domain.exceptions import UserNotFoundError
 from presentation.common.messages import Messages
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.keyboards.main import kb_main
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 if TYPE_CHECKING:
-    from vk_api import VkApi
     from infrastructure import AppContainer
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class ExportInfographicHandler(VkHandler):
 
     def __init__(
         self,
-        vk_api: "VkApi",
+        vk_api: "VkSdk",
         container: "AppContainer",
         group_id: int,
     ) -> None:
@@ -66,11 +66,11 @@ class ExportInfographicHandler(VkHandler):
             container.services.generate_mood_infographic_use_case()
         )
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not self._matches_command(message.text.lower()):
             return False
 
-        await self._send_message(
+        await self._api.send_message(
             user_id=message.from_user.id,
             text=Messages.INOGRAPHIC_GENERATING,
         )
@@ -93,11 +93,11 @@ class ExportInfographicHandler(VkHandler):
             buffer = response.image_data
             image_bytes = buffer.getvalue()
 
-            attachment = await self._upload_photo(image_bytes, message.peer_id)
+            attachment = await self._api.upload_photo(image_bytes, message.peer_id)
 
             caption = _format_caption(response.stats, response.is_empty)
 
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=caption,
                 keyboard=kb_main(),
@@ -106,7 +106,7 @@ class ExportInfographicHandler(VkHandler):
             return True
 
         except UserNotFoundError:
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.WELCOME_STUB_MESSAGE,
                 keyboard=kb_main(),
@@ -119,7 +119,7 @@ class ExportInfographicHandler(VkHandler):
                 message.from_user.id,
                 e,
             )
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERATE_INFOGRAPHIC,
                 keyboard=kb_main(),
@@ -135,25 +135,10 @@ class ExportInfographicHandler(VkHandler):
             if buffer is not None:
                 buffer.close()
 
-    async def _upload_photo(self, image_bytes: bytes, peer_id: int) -> str:
-        from vk_api.upload import VkUpload
-
-        def _sync_upload() -> str:
-            upload = VkUpload(self._vk)
-            photos = upload.photo_messages(
-                photos=BytesIO(image_bytes),
-                peer_id=peer_id,
-            )
-            p = photos[0]
-            return f"photo{p['owner_id']}_{p['id']}"
-
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _sync_upload)
-
     async def _keep_typing(self, user_id: int) -> None:
         while True:
             try:
-                await self._call_vk_method(
+                await self._api.call_vk_method(
                     "messages.setActivity",
                     {
                         "user_id": user_id,

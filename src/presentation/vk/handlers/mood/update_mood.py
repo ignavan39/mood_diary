@@ -6,10 +6,11 @@ from application.use_cases.update_mood import UpdateMoodRequest, UpdateMoodUseCa
 from infrastructure import AppContainer
 from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
-from vk_api import VkApi
 
 from presentation.vk.keyboards.main import kb_main
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 PLATFORM = "vk"
 
@@ -21,7 +22,7 @@ class UpdateMoodHandler(VkHandler):
     COMMANDS: ClassVar[tuple[str, ...]] = ()
 
     def __init__(
-        self, vk_api: "VkApi", container: "AppContainer", group_id: int
+        self, vk_api: "VkSdk", container: "AppContainer", group_id: int
     ) -> None:
         super().__init__(vk_api, container, group_id)
         self._use_case: UpdateMoodUseCase = container.services.update_mood_use_case()
@@ -32,14 +33,14 @@ class UpdateMoodHandler(VkHandler):
             or message.payload.get("action") == "update_mood_no"
         )
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not self.matches(message) or message.payload is None:
             return False
 
         if message.payload.get("action") == "update_mood_no":
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
-                text=Messages.WELCOME_STUB_MESSAGE,
+                text=Messages.STUB_MESSAGE,
                 keyboard=kb_main(),
             )
             return True
@@ -68,7 +69,7 @@ class UpdateMoodHandler(VkHandler):
                     new_rating=response.new_rating,
                 )
 
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=text,
                 keyboard=kb_main(),
@@ -77,7 +78,7 @@ class UpdateMoodHandler(VkHandler):
 
         except Exception as e:
             logger.exception("UpdateMoodHandler error: %s", e)
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,
                 keyboard=kb_main(),

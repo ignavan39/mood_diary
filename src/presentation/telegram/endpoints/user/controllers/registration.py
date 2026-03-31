@@ -2,14 +2,17 @@ import logging
 
 from aiogram.types import Message
 
-from application.use_cases import RegisterUserRequest, RegisterUserUseCase
+from application.use_cases import (
+    EnsureUserUseCase,
+)
+from application.use_cases.ensure_user import EnsureUserRequest
 from presentation.common import Messages
 
 logger = logging.getLogger(__name__)
 
 
 class RegisterUserController:
-    def __init__(self, use_case: RegisterUserUseCase):
+    def __init__(self, use_case: EnsureUserUseCase):
         self._use_case = use_case
 
     async def call(self, message: Message) -> None:
@@ -20,7 +23,7 @@ class RegisterUserController:
             full_name = message.from_user.full_name or "Пользователь"
             username = message.from_user.username or "Пользователь"
 
-            request = RegisterUserRequest(
+            request = EnsureUserRequest(
                 external_user_id=str(tg_id),
                 full_name=full_name,
                 platform="telegram",

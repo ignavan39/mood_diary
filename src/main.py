@@ -31,7 +31,7 @@ container = AppContainer()
 
 
 async def on_startup() -> None:
-    await container.infrastructure.container.redis_cache().get_connection()
+    await container.infrastructure.container.cache().get_connection()
     session_manager = container.infrastructure.container.session_manager()
     async with session_manager.get_session() as session:
         await session.execute(text("SELECT 1"))

@@ -5,7 +5,10 @@ from aiogram.types import CallbackQuery, Message
 from dependency_injector.providers import Factory
 from dependency_injector.wiring import Provide, inject
 
-from application.use_cases import GetUserStatsUseCase, RegisterUserUseCase
+from application.use_cases import (
+    EnsureUserUseCase,
+    GetUserStatsUseCase,
+)
 from infrastructure.ioc.container.application import AppContainer
 from presentation.telegram.endpoints.user.controllers import RegisterUserController
 from presentation.telegram.endpoints.user.controllers.profile import ProfileController
@@ -18,8 +21,8 @@ router = Router()
 @inject
 async def registration(
     message: Message,
-    use_case_factory: Factory[RegisterUserUseCase] = Provide[
-        AppContainer.services.register_user_use_case
+    use_case_factory: Factory[EnsureUserUseCase] = Provide[
+        AppContainer.services.ensure_user_use_case
     ],
 ) -> None:
     use_case = use_case_factory.provider()

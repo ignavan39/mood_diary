@@ -22,7 +22,7 @@ class InfrastructureContainer(containers.DeclarativeContainer):
         DatabaseSessionManager, host=settings.db.url
     )
 
-    redis_cache: Singleton[RedisManager] = providers.Singleton(
+    cache: Singleton[RedisManager] = providers.Singleton(
         RedisManager,
         host=settings.redis_cache.host,
         port=settings.redis_cache.port,

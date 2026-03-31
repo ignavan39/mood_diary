@@ -41,6 +41,8 @@ class Messages:
         "unstable_declining": "нестабильно, но улучшается",
     }
 
+    STUB_MESSAGE = "Чем могу помочь? Нажми /help для справки."
+
     HELP_TEXT = (
         "📖 Справка по боту\n\n"
         "🎯 Оценить настроение:\n"

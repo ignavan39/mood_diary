@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from domain.dtos import SaveUserDTO
 from domain.entities import User
@@ -8,15 +7,14 @@ from domain.entities.user import Platform
 
 class UserRepository(ABC):
     @abstractmethod
-    async def save(self, user: SaveUserDTO) -> Optional[User]:
+    async def save(self, user: SaveUserDTO) -> User:
         """Persist a user and return it with generated ID"""
         pass
 
     @abstractmethod
     async def get_by_external_id(
         self, external_id: str, platfrom: Platform
-    ) -> User | None:
-        pass
+    ) -> User | None: ...
 
     # @abstractmethod
     # def find_by_id(self, user_id: int) -> Optional[User]:
