@@ -1,0 +1,4 @@
+CACHE_KEY_GENERATE_INFORGRAPHIC = "vk:infographic:{external_user_id}:{days}"
+CACHE_KEY_ALL_INGOGRAPHICS = "vk:infographic:{external_user_id}:*"
+CACHE_TTL__GENERATE_INFORGRAPHIC = 3600
+DEFAULT_DAYS_GENERATE_INFORGRAPHIC = 30

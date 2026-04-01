@@ -1,6 +1,8 @@
 import asyncio
+from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, ClassVar
+from mashumaro import DataClassDictMixin
 
 from application.dtos import GenerateInfographicRequest
 from application.dtos.infographic_dtos import InfographicStats
@@ -10,6 +12,11 @@ from application.use_cases.generate_mood_infographic import (
 from domain.exceptions import UserNotFoundError
 from presentation.common.messages import Messages
 from presentation.vk.handlers.base import VkHandler
+from presentation.vk.handlers.constants import (
+    CACHE_KEY_GENERATE_INFORGRAPHIC,
+    CACHE_TTL__GENERATE_INFORGRAPHIC,
+    DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+)
 from presentation.vk.keyboards.main import kb_main
 from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
@@ -21,6 +28,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 PLATFORM = "vk"
+
+
+@dataclass
+class CachedInfographic(DataClassDictMixin):
+    attachment: str
+    caption: str
 
 
 def _format_caption(stats: InfographicStats, is_empty: bool = False) -> str:
@@ -56,10 +69,7 @@ class ExportInfographicHandler(VkHandler):
     )
 
     def __init__(
-        self,
-        vk_api: "VkSdk",
-        container: "AppContainer",
-        group_id: int,
+        self, vk_api: "VkSdk", container: "AppContainer", group_id: int
     ) -> None:
         super().__init__(vk_api, container, group_id)
         self._use_case: GenerateMoodInfographicUseCase = (
@@ -79,23 +89,46 @@ class ExportInfographicHandler(VkHandler):
         buffer = None
 
         try:
-            request = GenerateInfographicRequest(
-                external_user_id=message.from_user.id,
-                days=30,
-                chart_type="line",
-                format="png",
-                include_stats=True,
-                theme="light",
-                platform=PLATFORM,
+            cache = self._container.infrastructure.cache()
+            cached_value = await cache.get(
+                CACHE_KEY_GENERATE_INFORGRAPHIC.format(
+                    external_user_id=message.from_user.id,
+                    days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                )
             )
-            response = await self._use_case.execute(request)
+            if cached_value:
+                logger.debug(
+                    "Cached infographic found for user %d", message.from_user.id
+                )
+                cached_infographic = CachedInfographic.from_dict(cached_value)
+                attachment = cached_infographic.attachment
+                caption = cached_infographic.caption
+            else:
+                request = GenerateInfographicRequest(
+                    external_user_id=message.from_user.id,
+                    days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                    chart_type="line",
+                    format="png",
+                    include_stats=True,
+                    theme="light",
+                    platform=PLATFORM,
+                )
+                response = await self._use_case.execute(request)
 
-            buffer = response.image_data
-            image_bytes = buffer.getvalue()
+                buffer = response.image_data
+                image_bytes = buffer.getvalue()
 
-            attachment = await self._api.upload_photo(image_bytes, message.peer_id)
+                attachment = await self._api.upload_photo(image_bytes, message.peer_id)
 
-            caption = _format_caption(response.stats, response.is_empty)
+                caption = _format_caption(response.stats, response.is_empty)
+                await cache.set(
+                    CACHE_KEY_GENERATE_INFORGRAPHIC.format(
+                        external_user_id=message.from_user.id,
+                        days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                    ),
+                    CachedInfographic(attachment=attachment, caption=caption).to_dict(),
+                    ttl=CACHE_TTL__GENERATE_INFORGRAPHIC,
+                )
 
             await self._api.send_message(
                 user_id=message.from_user.id,

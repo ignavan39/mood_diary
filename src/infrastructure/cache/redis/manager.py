@@ -84,6 +84,13 @@ class RedisManager(Cache):
         redis = await self.get_connection()
         return await redis.delete(key)
 
+    async def delete_by_pattern(self, pattern: str) -> None:
+        redis = await self.get_connection()
+        matching_keys = await redis.keys(pattern)
+        if matching_keys is None:
+            return
+        await redis.unlink(*matching_keys)
+
     async def exists(self, key: str) -> bool:
         redis = await self.get_connection()
         return await redis.exists(key) == 1
