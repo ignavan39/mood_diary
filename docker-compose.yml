@@ -34,7 +34,7 @@ services:
 
   redis:
     container_name: mood-diary-redis
-    image: "redis:7-alpine"
+    image: "redis:8-alpine"
     command: redis-server --requirepass ${REDIS__PASSWORD:-password}
     volumes:
       - redis_data:/data
