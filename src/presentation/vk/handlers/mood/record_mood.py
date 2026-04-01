@@ -5,13 +5,16 @@ from datetime import datetime
 from application.use_cases import RecordMoodUseCase
 from application.use_cases.record_mood import RecordMoodRequest
 from domain.exceptions import UserNotFoundError
+from infrastructure.cache import Cache
 from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
+from presentation.vk.handlers.constants import CACHE_KEY_ALL_INGOGRAPHICS
 from presentation.vk.keyboards import kb_confirm, kb_main
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 if TYPE_CHECKING:
-    from vk_api import VkApi
     from infrastructure import AppContainer
 
 PLATFORM = "vk"
@@ -23,7 +26,7 @@ class RecordMoodHandler(VkHandler):
 
     def __init__(
         self,
-        vk_api: "VkApi",
+        vk_api: "VkSdk",
         container: "AppContainer",
         group_id: int,
     ) -> None:
@@ -52,7 +55,7 @@ class RecordMoodHandler(VkHandler):
 
         return False
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         logger.debug(
             "RecordMoodHandler checking: text='%s', payload=%s, event_id=%s",
             message.text,
@@ -87,13 +90,13 @@ class RecordMoodHandler(VkHandler):
                     text = Messages.format(
                         Messages.MOOD_UPDATE_EQUAL, rating=rating, emoji=emoji
                     )
-                    await self._send_message(
+                    await self._api.send_message(
                         user_id=message.from_user.id,
                         text=text,
                         keyboard=kb_main(),
                     )
                 else:
-                    await self._send_message(
+                    await self._api.send_message(
                         user_id=message.from_user.id,
                         text=Messages.format(
                             Messages.MOOD_DUPLICATE,
@@ -113,14 +116,20 @@ class RecordMoodHandler(VkHandler):
                         ),
                     )
             else:
-                await self._send_message(
+                cache: Cache = self._container.infrastructure.cache()
+                await cache.delete_by_pattern(
+                    CACHE_KEY_ALL_INGOGRAPHICS.format(
+                        external_user_id=message.from_user.id,
+                    )
+                )
+                await self._api.send_message(
                     user_id=message.from_user.id,
                     text=Messages.format(Messages.MOOD_SAVED, mood=rating, emoji=emoji),
                     keyboard=kb_main(),
                 )
 
             if event_id:
-                await self._answer_callback_event(
+                await self._api.answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,
@@ -130,12 +139,12 @@ class RecordMoodHandler(VkHandler):
 
         except UserNotFoundError:
             if event_id:
-                await self._answer_callback_event(
+                await self._api.answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,
                 )
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.WELCOME_STUB_MESSAGE,
                 keyboard=kb_main(),
@@ -145,12 +154,12 @@ class RecordMoodHandler(VkHandler):
         except Exception as e:
             logger.exception("RecordMoodHandler error: %s", e)
             if event_id:
-                await self._answer_callback_event(
+                await self._api.answer_callback_event(
                     event_id=event_id,
                     user_id=message.from_user.id,
                     action=None,
                 )
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,
                 keyboard=kb_main(),

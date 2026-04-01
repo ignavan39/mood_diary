@@ -1,7 +1,8 @@
 import asyncio
+from dataclasses import dataclass
 import logging
-from io import BytesIO
 from typing import TYPE_CHECKING, ClassVar
+from mashumaro import DataClassDictMixin
 
 from application.dtos import GenerateInfographicRequest
 from application.dtos.infographic_dtos import InfographicStats
@@ -11,16 +12,28 @@ from application.use_cases.generate_mood_infographic import (
 from domain.exceptions import UserNotFoundError
 from presentation.common.messages import Messages
 from presentation.vk.handlers.base import VkHandler
+from presentation.vk.handlers.constants import (
+    CACHE_KEY_GENERATE_INFORGRAPHIC,
+    CACHE_TTL__GENERATE_INFORGRAPHIC,
+    DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+)
 from presentation.vk.keyboards.main import kb_main
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 if TYPE_CHECKING:
-    from vk_api import VkApi
     from infrastructure import AppContainer
 
 logger = logging.getLogger(__name__)
 
 PLATFORM = "vk"
+
+
+@dataclass
+class CachedInfographic(DataClassDictMixin):
+    attachment: str
+    caption: str
 
 
 def _format_caption(stats: InfographicStats, is_empty: bool = False) -> str:
@@ -56,21 +69,18 @@ class ExportInfographicHandler(VkHandler):
     )
 
     def __init__(
-        self,
-        vk_api: "VkApi",
-        container: "AppContainer",
-        group_id: int,
+        self, vk_api: "VkSdk", container: "AppContainer", group_id: int
     ) -> None:
         super().__init__(vk_api, container, group_id)
         self._use_case: GenerateMoodInfographicUseCase = (
             container.services.generate_mood_infographic_use_case()
         )
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not self._matches_command(message.text.lower()):
             return False
 
-        await self._send_message(
+        await self._api.send_message(
             user_id=message.from_user.id,
             text=Messages.INOGRAPHIC_GENERATING,
         )
@@ -79,25 +89,48 @@ class ExportInfographicHandler(VkHandler):
         buffer = None
 
         try:
-            request = GenerateInfographicRequest(
-                external_user_id=message.from_user.id,
-                days=30,
-                chart_type="line",
-                format="png",
-                include_stats=True,
-                theme="light",
-                platform=PLATFORM,
+            cache = self._container.infrastructure.cache()
+            cached_value = await cache.get(
+                CACHE_KEY_GENERATE_INFORGRAPHIC.format(
+                    external_user_id=message.from_user.id,
+                    days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                )
             )
-            response = await self._use_case.execute(request)
+            if cached_value:
+                logger.debug(
+                    "Cached infographic found for user %d", message.from_user.id
+                )
+                cached_infographic = CachedInfographic.from_dict(cached_value)
+                attachment = cached_infographic.attachment
+                caption = cached_infographic.caption
+            else:
+                request = GenerateInfographicRequest(
+                    external_user_id=message.from_user.id,
+                    days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                    chart_type="line",
+                    format="png",
+                    include_stats=True,
+                    theme="light",
+                    platform=PLATFORM,
+                )
+                response = await self._use_case.execute(request)
 
-            buffer = response.image_data
-            image_bytes = buffer.getvalue()
+                buffer = response.image_data
+                image_bytes = buffer.getvalue()
 
-            attachment = await self._upload_photo(image_bytes, message.peer_id)
+                attachment = await self._api.upload_photo(image_bytes, message.peer_id)
 
-            caption = _format_caption(response.stats, response.is_empty)
+                caption = _format_caption(response.stats, response.is_empty)
+                await cache.set(
+                    CACHE_KEY_GENERATE_INFORGRAPHIC.format(
+                        external_user_id=message.from_user.id,
+                        days=DEFAULT_DAYS_GENERATE_INFORGRAPHIC,
+                    ),
+                    CachedInfographic(attachment=attachment, caption=caption).to_dict(),
+                    ttl=CACHE_TTL__GENERATE_INFORGRAPHIC,
+                )
 
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=caption,
                 keyboard=kb_main(),
@@ -106,7 +139,7 @@ class ExportInfographicHandler(VkHandler):
             return True
 
         except UserNotFoundError:
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.WELCOME_STUB_MESSAGE,
                 keyboard=kb_main(),
@@ -119,7 +152,7 @@ class ExportInfographicHandler(VkHandler):
                 message.from_user.id,
                 e,
             )
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERATE_INFOGRAPHIC,
                 keyboard=kb_main(),
@@ -135,25 +168,10 @@ class ExportInfographicHandler(VkHandler):
             if buffer is not None:
                 buffer.close()
 
-    async def _upload_photo(self, image_bytes: bytes, peer_id: int) -> str:
-        from vk_api.upload import VkUpload
-
-        def _sync_upload() -> str:
-            upload = VkUpload(self._vk)
-            photos = upload.photo_messages(
-                photos=BytesIO(image_bytes),
-                peer_id=peer_id,
-            )
-            p = photos[0]
-            return f"photo{p['owner_id']}_{p['id']}"
-
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _sync_upload)
-
     async def _keep_typing(self, user_id: int) -> None:
         while True:
             try:
-                await self._call_vk_method(
+                await self._api.call_vk_method(
                     "messages.setActivity",
                     {
                         "user_id": user_id,

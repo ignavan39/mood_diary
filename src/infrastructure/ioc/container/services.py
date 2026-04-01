@@ -1,9 +1,9 @@
 from dependency_injector import containers, providers
 
 from application.use_cases import (
+    EnsureUserUseCase,
     GetUserStatsUseCase,
     RecordMoodUseCase,
-    RegisterUserUseCase,
 )
 from application.use_cases.generate_mood_infographic import (
     GenerateMoodInfographicUseCase,
@@ -14,17 +14,11 @@ from application.use_cases.update_mood import UpdateMoodUseCase
 class ServicesContainer(containers.DeclarativeContainer):
     infrastructure = providers.DependenciesContainer()
 
-    register_user_use_case: providers.Factory[RegisterUserUseCase] = providers.Factory(
-        RegisterUserUseCase,
-        user_repo=infrastructure.user_repository.provided,
-    )
-
     get_user_stats_use_case: providers.Factory[GetUserStatsUseCase] = providers.Factory(
         GetUserStatsUseCase,
         diary_repo=infrastructure.diary_repository.provided,
         user_repo=infrastructure.user_repository.provided,
     )
-
     record_mood_use_case: providers.Factory[RecordMoodUseCase] = providers.Factory(
         RecordMoodUseCase,
         diary_repo=infrastructure.diary_repository.provided,
@@ -43,4 +37,9 @@ class ServicesContainer(containers.DeclarativeContainer):
         diary_repo=infrastructure.diary_repository.provided,
         user_repo=infrastructure.user_repository.provided,
         chart_generator=infrastructure.chart_generator.provided,
+    )
+
+    ensure_user_use_case: providers.Factory[EnsureUserUseCase] = providers.Factory(
+        EnsureUserUseCase,
+        user_repo=infrastructure.user_repository.provided,
     )
