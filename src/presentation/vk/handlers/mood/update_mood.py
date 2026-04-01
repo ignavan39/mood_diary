@@ -4,9 +4,11 @@ from typing import ClassVar
 
 from application.use_cases.update_mood import UpdateMoodRequest, UpdateMoodUseCase
 from infrastructure import AppContainer
+from infrastructure.cache import Cache
 from presentation.common import Messages
 from presentation.vk.handlers.base import VkHandler
 
+from presentation.vk.handlers.constants import CACHE_KEY_ALL_INGOGRAPHICS
 from presentation.vk.keyboards.main import kb_main
 from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
@@ -68,6 +70,13 @@ class UpdateMoodHandler(VkHandler):
                     old_rating=response.old_rating,
                     new_rating=response.new_rating,
                 )
+
+            cache: Cache = self._container.infrastructure.cache()
+            await cache.delete_by_pattern(
+                CACHE_KEY_ALL_INGOGRAPHICS.format(
+                    external_user_id=message.from_user.id,
+                )
+            )
 
             await self._api.send_message(
                 user_id=message.from_user.id,
