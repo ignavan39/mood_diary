@@ -157,7 +157,7 @@ class VkLongPolling:
     ) -> threading.Thread:
         self._stop_event.clear()
 
-        def _run_with_async():
+        def _run_with_async() -> None:
             try:
                 self._polling_loop()
             except Exception as e:

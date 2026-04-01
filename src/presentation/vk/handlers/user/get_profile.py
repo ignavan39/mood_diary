@@ -11,11 +11,12 @@ from presentation.common.messages import Messages
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.keyboards import kb_stats_period
 from presentation.vk.keyboards.main import kb_main
+from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
+from presentation.vk.types import Context
 
 if TYPE_CHECKING:
     from infrastructure import AppContainer
-    from vk_api import VkApi
 
 logger = logging.getLogger(__name__)
 PLATFORM = "vk"
@@ -30,11 +31,11 @@ class GetPofileMenuHandler(VkHandler):
         "profile",
     )
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not self._matches_command(message.text.lower()):
             return False
 
-        await self._send_message(
+        await self._api.send_message(
             user_id=message.from_user.id,
             text=Messages.CHOOSE_PERIOD,
             keyboard=kb_stats_period(),
@@ -47,7 +48,7 @@ class GetProfileHandler(VkHandler):
 
     def __init__(
         self,
-        vk_api: "VkApi",
+        vk_api: "VkSdk",
         container: "AppContainer",
         group_id: int,
     ) -> None:
@@ -63,7 +64,7 @@ class GetProfileHandler(VkHandler):
         period = Messages.get_period_label_by_str(message.text.strip())
         return period is not None
 
-    async def handle(self, message: VkMessage) -> bool:
+    async def handle(self, message: VkMessage, ctx: Context) -> bool:
         if not self._matches_period(message):
             return False
 
@@ -93,7 +94,7 @@ class GetProfileHandler(VkHandler):
                 or response.stats is None
                 or response.stats.total_entries == 0
             ):
-                await self._send_message(
+                await self._api.send_message(
                     user_id=message.from_user.id,
                     text=Messages.STATS_NO_DATA,
                     keyboard=kb_main(),
@@ -119,7 +120,7 @@ class GetProfileHandler(VkHandler):
                 )
             )
 
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=text,
                 keyboard=kb_main(),
@@ -128,7 +129,7 @@ class GetProfileHandler(VkHandler):
             return True
 
         except UserNotFoundError:
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.STATS_NO_DATA,
                 keyboard=kb_main(),
@@ -137,7 +138,7 @@ class GetProfileHandler(VkHandler):
 
         except Exception as e:
             logger.exception("GetProfileHandler error: %s", e)
-            await self._send_message(
+            await self._api.send_message(
                 user_id=message.from_user.id,
                 text=Messages.ERROR_GENERIC,
                 keyboard=kb_main(),

@@ -9,6 +9,7 @@ dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
     "dependency-injector2>=4.41.1",
+    "mashumaro>=3.20",
     "matplotlib>=3.10.8",
     "mypy>=1.19.1",
     "numpy>=2.4.3",
