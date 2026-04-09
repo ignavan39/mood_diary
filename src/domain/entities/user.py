@@ -16,3 +16,5 @@ class User(DataClassDictMixin):
     platform: Platform = "telegram"
     username: Optional[str] = None
     diaries: List[Diary] = field(default_factory=list)
+    reminder_hour: Optional[int] = None
+    reminder_enabled: bool = False

@@ -10,3 +10,5 @@ class SaveUserDTO:
     full_name: Optional[str] = None
     platform: Platform = "telegram"
     username: Optional[str] = None
+    reminder_hour: Optional[int] = None
+    reminder_enabled: bool = False

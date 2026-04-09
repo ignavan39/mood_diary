@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from domain.dtos import SaveUserDTO
 from domain.entities import User
@@ -15,6 +16,9 @@ class UserRepository(ABC):
     async def get_by_external_id(
         self, external_id: str, platfrom: Platform
     ) -> User | None: ...
+
+    @abstractmethod
+    async def get_users_for_reminder(self, hour: int) -> List[User]: ...
 
     # @abstractmethod
     # def find_by_id(self, user_id: int) -> Optional[User]:

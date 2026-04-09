@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -25,6 +26,8 @@ class SQLAchemyUserRepository(UserRepository):
                 full_name=user.full_name,
                 platform=user.platform,
                 username=user.username,
+                reminder_hour=user.reminder_hour,
+                reminder_enabled=user.reminder_enabled,
             )
 
             try:
@@ -64,4 +67,17 @@ class SQLAchemyUserRepository(UserRepository):
             external_id=model.external_id,
             platform=model.platform,  # type: ignore
             username=model.username,
+            reminder_hour=model.reminder_hour,
+            reminder_enabled=model.reminder_enabled,
         )
+
+    async def get_users_for_reminder(self, hour: int) -> List[User]:
+        async with self.async_session_maker.get_session() as session:
+            stmt = select(UserModel).where(
+                UserModel.reminder_enabled,
+                UserModel.reminder_hour == hour,
+                UserModel.deleted_at.is_(None),
+            )
+            result = await session.execute(stmt)
+            models = result.scalars().all()
+            return [self._model_to_entity(m) for m in models]

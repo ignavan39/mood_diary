@@ -87,7 +87,7 @@ class RedisManager(Cache):
     async def delete_by_pattern(self, pattern: str) -> None:
         redis = await self.get_connection()
         matching_keys = await redis.keys(pattern)
-        if matching_keys is None:
+        if matching_keys is None or len(matching_keys) == 0:
             return
         await redis.unlink(*matching_keys)
 
