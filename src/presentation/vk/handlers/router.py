@@ -54,15 +54,13 @@ class VkRouter:
             GetHelpMessageHandler(
                 vk_api=vk_api, container=container, group_id=group_id
             ),
-            GetPofileMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
-            GetMoodMenuHandler(vk_api=vk_api, container=container, group_id=group_id),
-            RecordMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
-            RegisterUserHandler(vk_api=vk_api, container=container, group_id=group_id),
-            UpdateMoodHandler(vk_api=vk_api, container=container, group_id=group_id),
-            ExportInfographicHandler(
-                vk_api=vk_api, container=container, group_id=group_id
-            ),
-            FallbackHandler(vk_api=vk_api, container=container, group_id=group_id),
+            GetPofileMenuHandler(vk_api, container, group_id),
+            GetMoodMenuHandler(vk_api, container, group_id),
+            RecordMoodHandler(vk_api, container, group_id),
+            RegisterUserHandler(vk_api, container, group_id),
+            UpdateMoodHandler(vk_api, container, group_id),
+            ExportInfographicHandler(vk_api, container, group_id),
+            FallbackHandler(vk_api, container, group_id),
         ]
 
     async def route(self, message: VkMessage) -> bool:

@@ -162,6 +162,11 @@ class Messages:
         "no_data": "Нет данных",
     }
 
+    REMINDER_DISABLE_TEXT = "🔕 Отключить напоминания"
+
+    REMINDER_ENABLE_TEXT = "⏰ Включить напоминания"
+    REMINDER_EDIT_TEXT = "Изменить время напоминания {current}"
+
     INVALID_PERIOD = "❌ Неверный период"
 
     INVALID_DIARY_RATING = (
