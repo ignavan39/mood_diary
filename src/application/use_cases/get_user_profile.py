@@ -8,30 +8,37 @@ from domain.repositories import DiaryRepository, UserRepository
 
 
 @dataclass
-class GetUserStatsRequest:
+class GetUserProfileRequest:
     external_user_id: str
     platform: Platform
     period: StatsPeriod = StatsPeriod.WEEK
 
 
 @dataclass
-class GetUsetStatsResponse:
+class UserSettings:
+    reminder_enabled: bool = False
+    reminder_hour: Optional[int] = None
+
+
+@dataclass
+class GetUserProfileResponse:
     success: bool
     stats: Optional[MoodStatsDTO] = None
+    user_settings: Optional[UserSettings] = None
 
 
-class GetUserStatsUseCase:
+class GetUserProfileUseCase:
     def __init__(self, diary_repo: DiaryRepository, user_repo: UserRepository):
         self._diary_repo = diary_repo
         self._user_repo = user_repo
 
-    async def execute(self, request: GetUserStatsRequest) -> GetUsetStatsResponse:
+    async def execute(self, request: GetUserProfileRequest) -> GetUserProfileResponse:
         user = await self._user_repo.get_by_external_id(
             external_id=request.external_user_id,
             platfrom=request.platform,
         )
         if user is None or user.id is None:
-            return GetUsetStatsResponse(success=False)
+            return GetUserProfileResponse(success=False)
 
         stats_dict = await self._diary_repo.get_stats_by_user(
             user_id=user.id,
@@ -39,7 +46,7 @@ class GetUserStatsUseCase:
         )
 
         if not stats_dict or stats_dict.get("total_entries", 0) == 0:
-            return GetUsetStatsResponse(
+            return GetUserProfileResponse(
                 stats=MoodStatsDTO(
                     total_entries=0,
                     avg_mood=0.0,
@@ -64,7 +71,7 @@ class GetUserStatsUseCase:
             else:
                 first_entry_date = str(first_entry_date)[:10]
 
-        return GetUsetStatsResponse(
+        return GetUserProfileResponse(
             stats=MoodStatsDTO(
                 total_entries=stats_dict.get("total_entries", 0),
                 avg_mood=round(stats_dict.get("avg_mood", 0.0), 1),
@@ -73,6 +80,10 @@ class GetUserStatsUseCase:
                 period_days=request.period.value,
                 last_entry_date=last_entry_date,
                 first_entry_date=first_entry_date,
+            ),
+            user_settings=UserSettings(
+                reminder_enabled=user.reminder_enabled,
+                reminder_hour=user.reminder_hour,
             ),
             success=True,
         )

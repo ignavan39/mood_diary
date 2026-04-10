@@ -1,13 +1,12 @@
 import logging
 from typing import TYPE_CHECKING, ClassVar
 
-from application.use_cases.get_user_stats import (
-    GetUserStatsRequest,
-    GetUserStatsUseCase,
-)
+
+from application.use_cases import GetUserProfileUseCase
+from application.use_cases.get_user_profile import GetUserProfileRequest, UserSettings
 from domain.entities.stats_period import StatsPeriod
 from domain.exceptions import UserNotFoundError
-from presentation.common.messages import Messages
+from presentation.common.messages import Messages, StringBuilder
 from presentation.vk.handlers.base import VkHandler
 from presentation.vk.keyboards import kb_stats_period
 from presentation.vk.keyboards.main import kb_main
@@ -35,9 +34,24 @@ class GetPofileMenuHandler(VkHandler):
         if not self._matches_command(message.text.lower()):
             return False
 
+        user = ctx.user_ctx.user
+        text = (
+            StringBuilder()
+            .append(
+                Messages.get_profile_text(
+                    full_name=user.full_name or "Пользователь",
+                    user_settings=UserSettings(
+                        reminder_enabled=user.reminder_enabled,
+                        reminder_hour=user.reminder_hour,
+                    ),
+                )
+            )
+            .add_line(Messages.CHOOSE_PERIOD)
+        )
+
         await self._api.send_message(
             user_id=message.from_user.id,
-            text=Messages.CHOOSE_PERIOD,
+            text=text.get_text(),
             keyboard=kb_stats_period(),
         )
         return True
@@ -53,7 +67,7 @@ class GetProfileHandler(VkHandler):
         group_id: int,
     ) -> None:
         super().__init__(vk_api, container, group_id)
-        self._use_case: GetUserStatsUseCase = (
+        self._use_case: GetUserProfileUseCase = (
             container.services.get_user_stats_use_case()
         )
 
@@ -82,42 +96,28 @@ class GetProfileHandler(VkHandler):
                     return False
 
             response = await self._use_case.execute(
-                GetUserStatsRequest(
+                GetUserProfileRequest(
                     external_user_id=str(message.from_user.id),
                     platform=PLATFORM,
                     period=period,
                 )
             )
-
             if (
                 not response.success
                 or response.stats is None
                 or response.stats.total_entries == 0
             ):
-                await self._api.send_message(
-                    user_id=message.from_user.id,
-                    text=Messages.STATS_NO_DATA,
-                    keyboard=kb_main(),
-                )
-                return True
+                s = None
 
-            s = response.stats
-            period_label = Messages.get_period_str_by_day(period.value)
+            else:
+                s = response.stats
 
-            text = (
-                Messages.format(Messages.STATS_TITLE, period=period_label)
-                + "\n\n"
-                + Messages.format(
-                    Messages.STATS_DETAILS,
-                    emoji=Messages.get_mood_emoji(int(s.avg_mood)),
-                    avg=s.avg_mood,
-                    mood_text=Messages.get_mood_text(s.avg_mood),
-                    total=s.total_entries,
-                    min=s.min_mood,
-                    max=s.max_mood,
-                    first=s.first_entry_date or "—",
-                    last=s.last_entry_date or "—",
-                )
+            user = ctx.user_ctx.user
+            text = Messages.get_profile_text_with_stats(
+                full_name=user.full_name or "Пользователь",
+                period=period,
+                mood_stats=s,
+                user_settings=response.user_settings or UserSettings(),
             )
 
             await self._api.send_message(
@@ -131,7 +131,7 @@ class GetProfileHandler(VkHandler):
         except UserNotFoundError:
             await self._api.send_message(
                 user_id=message.from_user.id,
-                text=Messages.STATS_NO_DATA,
+                text=Messages.PROFILE_STATS_NO_DATA,
                 keyboard=kb_main(),
             )
             return True

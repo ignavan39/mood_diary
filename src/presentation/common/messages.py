@@ -1,4 +1,28 @@
+from typing import Optional
+
+from application.dtos import MoodStatsDTO
+from application.use_cases.get_user_profile import UserSettings
 from domain.entities import StatsPeriod
+
+
+class StringBuilder:
+    def __init__(self) -> None:
+        self._text = ""
+
+    def append(self, text: str) -> "StringBuilder":
+        self._text += text
+        return self
+
+    def add_line(self, text: str) -> "StringBuilder":
+        self._text += "\n" + text
+        return self
+
+    def add_doble_line(self, text: str) -> "StringBuilder":
+        self._text += "\n\n" + text
+        return self
+
+    def get_text(self) -> str:
+        return self._text
 
 
 class Messages:
@@ -28,7 +52,7 @@ class Messages:
         "Сгенерировано @mood_diary_bbot"
     )
 
-    CHOOSE_PERIOD = "📊 Выбери период:"
+    CHOOSE_PERIOD = "📊 Выбери период для получения статистики:"
 
     INOGRAPHIC_GENERATING = "🎨 Генерирую инфографику..."
 
@@ -87,14 +111,20 @@ class Messages:
         "Хотите обновить?"
     )
 
-    STATS_TITLE = "📊 Статистика: {period}"
+    PROFILE_TITLE = "Профиль: {full_name}"
+    PROFILE_SETTINGS = "🔧 Настройки"
+    PROFILE_SETTINGS_REMINDER = "Напоминание:"
+    PROFILE_SETTINGS_REMINDER_ENABLED = "🔔 Включено"
+    PROFILE_SETTINGS_REMINDER_DISABLED = "🔕 Выключено"
 
-    STATS_NO_DATA = (
+    PROFILE_STATS_TITLE = "📊 Статистика: {period}"
+
+    PROFILE_STATS_NO_DATA = (
         "❌ Нет записей за этот период.\n\n"
         "Используй /mood чтобы добавить первую запись!"
     )
 
-    STATS_DETAILS = (
+    PROFILE_STATS_DETAILS = (
         "{emoji} Среднее настроение: {avg}/10 ({mood_text})\n\n"
         "📈 Детали:\n"
         "• Записей: {total}\n"
@@ -104,6 +134,67 @@ class Messages:
         "• Первая запись: {first}\n"
         "• Последняя: {last}"
     )
+
+    @classmethod
+    def get_profile_text(
+        cls,
+        full_name: str,
+        user_settings: UserSettings,
+    ) -> str:
+        return (
+            StringBuilder()
+            .append(Messages.format(Messages.PROFILE_TITLE, full_name=full_name))
+            .add_doble_line(Messages.format(Messages.PROFILE_SETTINGS))
+            .add_line(
+                Messages.format(
+                    Messages.PROFILE_SETTINGS_REMINDER,
+                    enabled=user_settings.reminder_enabled,
+                )
+            )
+            .add_line(
+                Messages.format(
+                    Messages.PROFILE_SETTINGS_REMINDER_ENABLED
+                    if user_settings.reminder_enabled
+                    else Messages.PROFILE_SETTINGS_REMINDER_DISABLED
+                )
+            )
+            .get_text()
+        )
+
+    @classmethod
+    def get_profile_text_with_stats(
+        cls,
+        full_name: str,
+        period: StatsPeriod,
+        mood_stats: Optional[MoodStatsDTO],
+        user_settings: UserSettings,
+    ) -> str:
+
+        period_label = Messages.get_period_str_by_day(period.value)
+        profile_text = cls.get_profile_text(full_name, user_settings)
+        return (
+            StringBuilder()
+            .append(profile_text)
+            .add_doble_line(
+                Messages.format(Messages.PROFILE_STATS_TITLE, period=period_label)
+            )
+            .add_doble_line(
+                Messages.format(
+                    Messages.PROFILE_STATS_DETAILS,
+                    emoji=Messages.get_mood_emoji(int(mood_stats.avg_mood)),
+                    avg=mood_stats.avg_mood,
+                    mood_text=Messages.get_mood_text(mood_stats.avg_mood),
+                    total=mood_stats.total_entries,
+                    min=mood_stats.min_mood,
+                    max=mood_stats.max_mood,
+                    first=mood_stats.first_entry_date or "—",
+                    last=mood_stats.last_entry_date or "—",
+                )
+                if mood_stats is not None
+                else Messages.PROFILE_STATS_NO_DATA
+            )
+            .get_text()
+        )
 
     BTN_MOOD = "🎯 Оценить настроение"
     BTN_STATS = "📊 Моя статистика"

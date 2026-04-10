@@ -1,8 +1,8 @@
 from math import ceil
 
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
-from application.use_cases import GetUserStatsUseCase
-from application.use_cases.get_user_stats import GetUserStatsRequest
+from application.use_cases import GetUserProfileUseCase
+from application.use_cases.get_user_profile import GetUserProfileRequest
 from domain.entities import StatsPeriod
 from presentation.common import Messages
 from presentation.telegram.endpoints.user.keyboards import (
@@ -12,7 +12,7 @@ from presentation.telegram.endpoints.user.keyboards import (
 
 
 class ProfileController:
-    def __init__(self, use_case: GetUserStatsUseCase) -> None:
+    def __init__(self, use_case: GetUserProfileUseCase) -> None:
         self.use_case = use_case
 
     async def call(
@@ -56,7 +56,7 @@ class ProfileController:
         period: StatsPeriod,
     ) -> None:
 
-        request = GetUserStatsRequest(
+        request = GetUserProfileRequest(
             external_user_id=user_id, period=period, platform="telegram"
         )
         response = await self.use_case.execute(request)
@@ -70,7 +70,9 @@ class ProfileController:
             return
 
         if stats is None or stats.total_entries == 0:
-            error_text = Messages.format(Messages.STATS_NO_DATA, period=period.label)
+            error_text = Messages.format(
+                Messages.PROFILE_STATS_NO_DATA, period=period.label
+            )
             await message.answer(
                 error_text,
                 reply_markup=create_mood_stats_period_keyboard().as_markup(),
@@ -81,7 +83,7 @@ class ProfileController:
         mood_text = Messages.format(Messages.get_mood_text(stats.avg_mood))
 
         text = Messages.format(
-            Messages.STATS_DETAILS,
+            Messages.PROFILE_STATS_DETAILS,
             emoji=emoji,
             mood_text=mood_text,
             period=period.label,

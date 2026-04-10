@@ -7,7 +7,7 @@ from dependency_injector.wiring import Provide, inject
 
 from application.use_cases import (
     EnsureUserUseCase,
-    GetUserStatsUseCase,
+    GetUserProfileUseCase,
 )
 from infrastructure.ioc.container.application import AppContainer
 from presentation.telegram.endpoints.user.controllers import RegisterUserController
@@ -33,7 +33,7 @@ async def registration(
 @inject
 async def cmd_profile(
     message: Message,
-    use_case_factory: Factory[GetUserStatsUseCase] = Provide[
+    use_case_factory: Factory[GetUserProfileUseCase] = Provide[
         AppContainer.services.get_user_stats_use_case
     ],
 ) -> None:
@@ -45,7 +45,7 @@ async def cmd_profile(
 @inject
 async def handle_stats_period(
     callback: CallbackQuery,
-    use_case_factory: Factory[GetUserStatsUseCase] = Provide[
+    use_case_factory: Factory[GetUserProfileUseCase] = Provide[
         AppContainer.services.get_user_stats_use_case
     ],
 ) -> None:
