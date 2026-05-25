@@ -32,9 +32,11 @@ container = AppContainer()
 
 async def on_startup() -> None:
     await container.infrastructure.container.cache().get_connection()
+
     session_manager = container.infrastructure.container.session_manager()
     async with session_manager.get_session() as session:
         await session.execute(text("SELECT 1"))
+
     logger.info("All connections warmed up")
 
 
@@ -43,6 +45,7 @@ async def on_shutdown() -> None:
     await executor_pool.shutdown_all()
     await container.infrastructure.redis_cache().close()
     await container.infrastructure.session_manager().close()
+    await container.infrastructure.scheduler().shutdown()
     logger.info("Cleanup completed")
 
 
@@ -83,6 +86,8 @@ async def async_main() -> None:
     signal_handler.install_handlers()
 
     runner = BotRunner(bots)
+    
+    await container.infrastructure.scheduler().start()
 
     await asyncio.gather(
         runner.start_all(),

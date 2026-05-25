@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import AsyncIterator, List
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class SQLAchemyUserRepository(UserRepository):
+    BATCH_SIZE = 100
+
     def __init__(self, session_manager: DatabaseSessionManager):
         self.async_session_maker = session_manager
 
@@ -59,6 +61,35 @@ class SQLAchemyUserRepository(UserRepository):
                 return None
 
             return self._model_to_entity(user_model)
+
+    async def iter_users_for_reminder(self, hour: int) -> AsyncIterator[User]:
+        offset = 0
+        while True:
+            async with self.async_session_maker.get_session() as session:
+                stmt = (
+                    select(UserModel)
+                    .where(
+                        UserModel.reminder_enabled.is_(True),
+                        UserModel.reminder_hour == hour,
+                        UserModel.deleted_at.is_(None),
+                    )
+                    .order_by(UserModel.id)
+                    .limit(self.BATCH_SIZE)
+                    .offset(offset)
+                )
+                result = await session.execute(stmt)
+                models = result.scalars().all()
+
+            if not models:
+                break
+
+            for model in models:
+                yield self._model_to_entity(model)
+
+            offset += self.BATCH_SIZE
+            
+            if len(models) < self.BATCH_SIZE:
+                break
 
     def _model_to_entity(self, model: UserModel) -> User:
         return User(

@@ -11,6 +11,7 @@ from infrastructure.database.repositories.sqlachemy import (
     SQLAchemyDiaryRepository,
     SQLAchemyUserRepository,
 )
+from infrastructure.scheduler.scheduler import AppScheduler
 
 
 class InfrastructureContainer(containers.DeclarativeContainer):
@@ -41,4 +42,8 @@ class InfrastructureContainer(containers.DeclarativeContainer):
 
     chart_generator: Factory[ChartGeneratorInterface] = providers.Factory(
         MoodChartGenerator,
+    )
+
+    scheduler: Singleton[AppScheduler] = providers.Singleton(
+        AppScheduler,
     )

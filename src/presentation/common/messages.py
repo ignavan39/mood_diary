@@ -257,6 +257,7 @@ class Messages:
 
     REMINDER_ENABLE_TEXT = "⏰ Включить напоминания"
     REMINDER_EDIT_TEXT = "Изменить время напоминания {current}"
+    REMINDER_TEXT = "🔔 Напоминание: отметить настроение за сегодня!"
 
     INVALID_PERIOD = "❌ Неверный период"
 
