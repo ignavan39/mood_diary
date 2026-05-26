@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable
 
 from presentation.common.base_bot import BaseBot
 from presentation.vk.handlers.router import VkRouter, create_vk_router
-from presentation.vk.notifications.mood_record_reminder import MoodRecordReminder
+from presentation.vk.notifications.factory import notifications_factory
 from presentation.vk.polling import VkLongPolling
 from presentation.vk.sdk.api import VkSdk
 from presentation.vk.sdk.types import VkMessage
@@ -60,12 +60,9 @@ class VkBot(BaseBot):
         vk_sdk = VkSdk(vk)
         self._router = create_vk_router(vk_sdk, self._container, self._group_id)
         
-        mood_record_reminder = MoodRecordReminder(
-            vk_api=vk_sdk,
-            user_repository=self._container.infrastructure.container.user_repository(),
-            scheduler=self._container.infrastructure.scheduler(),
-        )
-        await mood_record_reminder.register()
+        notifications = notifications_factory(vk_sdk,container=self._container)
+        for n in notifications:
+            await n.register()
         
         self._polling = VkLongPolling(
             token=self._token,

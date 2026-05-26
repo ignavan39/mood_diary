@@ -23,7 +23,6 @@ class AppScheduler:
         self,
         func: Callable[..., Coroutine[Any, Any, None]],
         *,
-        id: str,
         name: str | None = None,
         hour: int | str = "*",
         minute: int | str = "*",
@@ -38,18 +37,17 @@ class AppScheduler:
                 minute=minute,
                 day_of_week=day_of_week,
             ),
-            id=id,
+            id=name,
             name=name or id,
             args=args or (),
             kwargs=kwargs or {},
         )
-        logger.info("Registered cron job: %s (%s:%s)", id, hour, minute)
+        logger.info("Registered cron job: %s (%s:%s)", name, hour, minute)
 
     def add_interval_job(
         self,
         func: Callable[..., Coroutine[Any, Any, None]],
         *,
-        id: str,
         name: str | None = None,
         minutes: int = 1,
         args: tuple | None = None,
@@ -58,18 +56,16 @@ class AppScheduler:
         self.scheduler.add_job(
             func,
             trigger=IntervalTrigger(minutes=minutes),
-            id=id,
-            name=name or id,
+            name=name,
+            id=name,
             args=args or (),
             kwargs=kwargs or {},
         )
-        logger.info("Registered interval job: %s (every %d min)", id, minutes)
+        logger.info("Registered interval job: %s (every %d min)", name, minutes)
 
     async def start(self) -> None:
         self.scheduler.start()
-        logger.info(
-            "Scheduler started with %d jobs", len(self.scheduler.get_jobs())
-        )
+        logger.info("Scheduler started with %d jobs", len(self.scheduler.get_jobs()))
 
     async def shutdown(self) -> None:
         if self.scheduler.running:
