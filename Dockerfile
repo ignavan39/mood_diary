@@ -1,5 +1,5 @@
 # Dockerfile
-FROM python:3.12-slim-trixie AS builder
+FROM python:3.14-slim-trixie AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY alembic.ini ./
 
 RUN uv sync --frozen --no-dev --no-install-project
 
-FROM python:3.12-slim-trixie AS runtime
+FROM python:3.14-slim-trixie AS runtime
 
 WORKDIR /app
 
